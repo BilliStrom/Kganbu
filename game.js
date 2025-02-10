@@ -1,4 +1,4 @@
-// Инициализация Firebase
+// Конфигурация Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
     authDomain: "knb-clicker-game.firebaseapp.com",
@@ -9,11 +9,9 @@ const firebaseConfig = {
 };
 
 // Инициализация Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const auth = firebase.auth();
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // Переменные игры
 let currentUser = null;
@@ -30,26 +28,26 @@ const leaderboardList = document.getElementById('leaderboard-list');
 const clickButton = document.getElementById('click-button');
 
 // Показать форму регистрации
-function showRegisterForm() {
+window.showRegisterForm = function() {
     loginForm.style.display = 'none';
     registerForm.style.display = 'block';
-}
+};
 
 // Показать форму логина
-function showLoginForm() {
+window.showLoginForm = function() {
     registerForm.style.display = 'none';
     loginForm.style.display = 'block';
-}
+};
 
 // Регистрация нового пользователя
-function register() {
-    const email = document.getElementById('register-username').value + "@knbgame.com"; // Простое решение для email
+window.register = function() {
+    const email = document.getElementById('register-username').value + "@knbgame.com";
     const password = document.getElementById('register-password').value;
 
-    auth.createUserWithEmailAndPassword(email, password)
+    createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             const user = userCredential.user;
-            db.collection('users').doc(user.uid).set({
+            setDoc(doc(db, 'users', user.uid), {
                 username: document.getElementById('register-username').value,
                 highScore: 0
             }).then(() => {
@@ -60,14 +58,14 @@ function register() {
         .catch((error) => {
             alert(error.message);
         });
-}
+};
 
 // Логин
-function login() {
+window.login = function() {
     const email = document.getElementById('login-username').value + "@knbgame.com";
     const password = document.getElementById('login-password').value;
 
-    auth.signInWithEmailAndPassword(email, password)
+    signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             currentUser = userCredential.user;
             loadUserData();
@@ -77,13 +75,13 @@ function login() {
         .catch((error) => {
             alert(error.message);
         });
-}
+};
 
 // Загрузка данных пользователя
 function loadUserData() {
-    db.collection('users').doc(currentUser.uid).get()
+    getDoc(doc(db, 'users', currentUser.uid))
         .then((doc) => {
-            if (doc.exists) {
+            if (doc.exists()) {
                 highScore = doc.data().highScore;
                 updateScoreDisplay();
             }
@@ -99,7 +97,8 @@ function updateScoreDisplay() {
 
 // Обновление таблицы лидеров
 function updateLeaderboard() {
-    db.collection('users').orderBy('highScore', 'desc').limit(10).get()
+    const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
+    getDocs(q)
         .then((querySnapshot) => {
             leaderboardList.innerHTML = '';
             querySnapshot.forEach((doc) => {
@@ -114,7 +113,7 @@ clickButton.addEventListener('click', () => {
     score += 1;
     if (score > highScore) {
         highScore = score;
-        db.collection('users').doc(currentUser.uid).update({
+        updateDoc(doc(db, 'users', currentUser.uid), {
             highScore: highScore
         }).then(() => {
             updateLeaderboard();
@@ -124,7 +123,7 @@ clickButton.addEventListener('click', () => {
 });
 
 // Проверка авторизации при загрузке страницы
-auth.onAuthStateChanged((user) => {
+onAuthStateChanged(auth, (user) => {
     if (user) {
         currentUser = user;
         loadUserData();
