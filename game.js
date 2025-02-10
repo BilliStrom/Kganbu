@@ -11,6 +11,7 @@ const firebaseConfig = {
   appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
 };
 
+
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -29,6 +30,7 @@ const scoreDisplay = document.getElementById('score');
 const highScoreDisplay = document.getElementById('high-score');
 const leaderboardList = document.getElementById('leaderboard-list');
 const clickButton = document.getElementById('click-button');
+const logoutButton = document.getElementById('logout-button'); // Кнопка выхода
 
 // Показать форму регистрации
 window.showRegisterForm = function() {
@@ -53,7 +55,7 @@ window.register = function() {
             setDoc(doc(db, 'users', user.uid), {
                 username: document.getElementById('register-username').value,
                 highScore: 0,
-                currentScore: 0 // Добавляем текущий счет
+                currentScore: 0
             }).then(() => {
                 alert('Registration successful! Please login.');
                 showLoginForm();
@@ -81,13 +83,27 @@ window.login = function() {
         });
 };
 
+// Выход из аккаунта
+logoutButton.addEventListener('click', () => {
+    signOut(auth)
+        .then(() => {
+            alert('Вы успешно вышли из аккаунта.');
+            currentUser = null;
+            loginForm.style.display = 'block';
+            gameContent.style.display = 'none';
+        })
+        .catch((error) => {
+            alert(error.message);
+        });
+});
+
 // Загрузка данных пользователя
 function loadUserData() {
     getDoc(doc(db, 'users', currentUser.uid))
         .then((doc) => {
             if (doc.exists()) {
                 highScore = doc.data().highScore;
-                score = doc.data().currentScore || 0; // Загружаем текущий счет
+                score = doc.data().currentScore || 0;
                 updateScoreDisplay();
             }
         });
@@ -120,7 +136,6 @@ clickButton.addEventListener('click', () => {
         highScore = score;
     }
 
-    // Сохраняем текущий счет и рекорд в Firestore
     updateDoc(doc(db, 'users', currentUser.uid), {
         currentScore: score,
         highScore: highScore
