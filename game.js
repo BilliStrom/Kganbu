@@ -1,15 +1,17 @@
 // Инициализация Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
-  authDomain: "knb-clicker-game.firebaseapp.com",
-  projectId: "KNB-Clicker-игра",
-  storageBucket: "knb-clicker-game.firebasestorage.app",
-  messagingSenderId: "810664187137",
-  appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"}; Инициализация Firebaseconst app = initializeApp(firebaseConfig
+    authDomain: "knb-clicker-game.firebaseapp.com",
+    projectId: "KNB-Clicker-игра",
+    storageBucket: "knb-clicker-game.firebasestorage.app",
+    messagingSenderId: "810664187137",
+    appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
 };
 
 // Инициализация Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -48,6 +50,7 @@ function register() {
         .then((userCredential) => {
             const user = userCredential.user;
             db.collection('users').doc(user.uid).set({
+                username: document.getElementById('register-username').value,
                 highScore: 0
             }).then(() => {
                 alert('Registration successful! Please login.');
@@ -101,7 +104,7 @@ function updateLeaderboard() {
             leaderboardList.innerHTML = '';
             querySnapshot.forEach((doc) => {
                 const user = doc.data();
-                leaderboardList.innerHTML += `<li>${doc.id}: ${user.highScore}</li>`;
+                leaderboardList.innerHTML += `<li>${user.username}: ${user.highScore}</li>`;
             });
         });
 }
@@ -118,4 +121,17 @@ clickButton.addEventListener('click', () => {
         });
     }
     updateScoreDisplay();
+});
+
+// Проверка авторизации при загрузке страницы
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        loadUserData();
+        loginForm.style.display = 'none';
+        gameContent.style.display = 'block';
+    } else {
+        loginForm.style.display = 'block';
+        gameContent.style.display = 'none';
+    }
 });
