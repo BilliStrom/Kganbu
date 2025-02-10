@@ -1,5 +1,19 @@
-// Данные пользователей и рекордов
-let users = JSON.parse(localStorage.getItem('users')) || {};
+// Инициализация Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
+  authDomain: "knb-clicker-game.firebaseapp.com",
+  projectId: "KNB-Clicker-игра",
+  storageBucket: "knb-clicker-game.firebasestorage.app",
+  messagingSenderId: "810664187137",
+  appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"}; Инициализация Firebaseconst app = initializeApp(firebaseConfig
+};
+
+// Инициализация Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Переменные игры
 let currentUser = null;
 let score = 0;
 let highScore = 0;
@@ -27,35 +41,50 @@ function showLoginForm() {
 
 // Регистрация нового пользователя
 function register() {
-    const username = document.getElementById('register-username').value;
+    const email = document.getElementById('register-username').value + "@knbgame.com"; // Простое решение для email
     const password = document.getElementById('register-password').value;
 
-    if (users[username]) {
-        alert('Username already exists!');
-        return;
-    }
-
-    users[username] = { password, highScore: 0 };
-    localStorage.setItem('users', JSON.stringify(users));
-    alert('Registration successful! Please login.');
-    showLoginForm();
+    auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            db.collection('users').doc(user.uid).set({
+                highScore: 0
+            }).then(() => {
+                alert('Registration successful! Please login.');
+                showLoginForm();
+            });
+        })
+        .catch((error) => {
+            alert(error.message);
+        });
 }
 
 // Логин
 function login() {
-    const username = document.getElementById('login-username').value;
+    const email = document.getElementById('login-username').value + "@knbgame.com";
     const password = document.getElementById('login-password').value;
 
-    if (!users[username] || users[username].password !== password) {
-        alert('Invalid username or password!');
-        return;
-    }
+    auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            currentUser = userCredential.user;
+            loadUserData();
+            loginForm.style.display = 'none';
+            gameContent.style.display = 'block';
+        })
+        .catch((error) => {
+            alert(error.message);
+        });
+}
 
-    currentUser = username;
-    highScore = users[username].highScore;
-    loginForm.style.display = 'none';
-    gameContent.style.display = 'block';
-    updateScoreDisplay();
+// Загрузка данных пользователя
+function loadUserData() {
+    db.collection('users').doc(currentUser.uid).get()
+        .then((doc) => {
+            if (doc.exists) {
+                highScore = doc.data().highScore;
+                updateScoreDisplay();
+            }
+        });
     updateLeaderboard();
 }
 
@@ -67,10 +96,14 @@ function updateScoreDisplay() {
 
 // Обновление таблицы лидеров
 function updateLeaderboard() {
-    const sortedUsers = Object.keys(users).sort((a, b) => users[b].highScore - users[a].highScore);
-    leaderboardList.innerHTML = sortedUsers.map(user => `
-        <li>${user}: ${users[user].highScore}</li>
-    `).join('');
+    db.collection('users').orderBy('highScore', 'desc').limit(10).get()
+        .then((querySnapshot) => {
+            leaderboardList.innerHTML = '';
+            querySnapshot.forEach((doc) => {
+                const user = doc.data();
+                leaderboardList.innerHTML += `<li>${doc.id}: ${user.highScore}</li>`;
+            });
+        });
 }
 
 // Обработка кликов
@@ -78,9 +111,11 @@ clickButton.addEventListener('click', () => {
     score += 1;
     if (score > highScore) {
         highScore = score;
-        users[currentUser].highScore = highScore;
-        localStorage.setItem('users', JSON.stringify(users));
-        updateLeaderboard();
+        db.collection('users').doc(currentUser.uid).update({
+            highScore: highScore
+        }).then(() => {
+            updateLeaderboard();
+        });
     }
     updateScoreDisplay();
 });
