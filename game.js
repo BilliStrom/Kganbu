@@ -125,6 +125,16 @@ clickButton.addEventListener('click', () => {
     updateScoreDisplay();
 });
 
+    // Сохраняем текущий счет и рекорд в Firestore
+    updateDoc(doc(db, 'users', currentUser.uid), {
+        currentScore: score,
+        highScore: highScore
+    }).then(() => {
+        updateScoreDisplay();
+        updateLeaderboard();
+    });
+});
+
 // Проверка авторизации при загрузке страницы
 onAuthStateChanged(auth, (user) => {
     if (user) {
