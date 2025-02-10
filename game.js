@@ -52,7 +52,8 @@ window.register = function() {
             const user = userCredential.user;
             setDoc(doc(db, 'users', user.uid), {
                 username: document.getElementById('register-username').value,
-                highScore: 0
+                highScore: 0,
+                currentScore: 0 // Добавляем текущий счет
             }).then(() => {
                 alert('Registration successful! Please login.');
                 showLoginForm();
@@ -86,6 +87,7 @@ function loadUserData() {
         .then((doc) => {
             if (doc.exists()) {
                 highScore = doc.data().highScore;
+                score = doc.data().currentScore || 0; // Загружаем текущий счет
                 updateScoreDisplay();
             }
         });
@@ -116,14 +118,7 @@ clickButton.addEventListener('click', () => {
     score += 1;
     if (score > highScore) {
         highScore = score;
-        updateDoc(doc(db, 'users', currentUser.uid), {
-            highScore: highScore
-        }).then(() => {
-            updateLeaderboard();
-        });
     }
-    updateScoreDisplay();
-});
 
     // Сохраняем текущий счет и рекорд в Firestore
     updateDoc(doc(db, 'users', currentUser.uid), {
