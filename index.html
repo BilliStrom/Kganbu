@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNB Clicker Challenge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        #game {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        #click-button {
+            padding: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        #score, #high-score {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #login-form, #register-form {
+            margin-top: 20px;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>KNB Clicker Challenge</h1>
+        <div id="login-form">
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button onclick="showRegisterForm()">Register</button>
+        </div>
+        <div id="register-form" style="display: none;">
+            <input type="text" id="register-username" placeholder="Username">
+            <input type="password" id="register-password" placeholder="Password">
+            <button onclick="register()">Register</button>
+            <button onclick="showLoginForm()">Back to Login</button>
+        </div>
+        <div id="game-content" style="display: none;">
+            <button id="click-button">Click Me!</button>
+            <div id="score">Score: 0</div>
+            <div id="high-score">High Score: 0</div>
+            <div id="leaderboard">
+                <h3>Leaderboard</h3>
+                <ul id="leaderboard-list"></ul>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
