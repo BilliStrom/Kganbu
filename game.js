@@ -4,11 +4,11 @@ import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, orderB
 // Конфигурация Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
-    authDomain: "knb-clicker-game.firebaseapp.com",
-    projectId: "KNB-Clicker-игра",
-    storageBucket: "knb-clicker-game.firebasestorage.app",
-    messagingSenderId: "810664187137",
-    appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
+  authDomain: "knb-clicker-game.firebaseapp.com",
+  projectId: "knb-clicker-game",
+  storageBucket: "knb-clicker-game.firebasestorage.app",
+  messagingSenderId: "810664187137",
+  appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
 };
 
 // Инициализация Firebase
