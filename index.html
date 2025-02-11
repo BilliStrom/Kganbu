@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -37,6 +37,7 @@
             top: 50%;
             transform: translateY(-50%);
             border-radius: 50%;
+            transition: top 0.1s;
         }
         .pipe {
             position: absolute;
@@ -46,31 +47,50 @@
         #score {
             font-size: 24px;
             margin-top: 20px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            z-index: 1;
         }
         #leaderboard {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+        .controls {
             margin-top: 20px;
-            text-align: left;
         }
-        #login-form, #register-form {
-            margin-top: 20px;
-        }
-        input {
-            padding: 10px;
-            margin: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
+        #restart-button {
+            background-color: #2196F3;
             color: white;
             border: none;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
         }
-        #logout-button {
-            margin-top: 20px;
+        #leaderboard-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #close-leaderboard {
             background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
     <script type="module">
@@ -100,7 +120,8 @@
         let gameInterval;
         let pipeInterval;
         let birdPosition = 200;
-        let gravity = 2;
+        let gravity = 1.5;
+        let isGameActive = false;
         let pipes = [];
 
         // Элементы DOM
@@ -108,24 +129,39 @@
         const registerForm = document.getElementById('register-form');
         const gameContent = document.getElementById('game-content');
         const scoreDisplay = document.getElementById('score');
+        const leaderboard = document.getElementById('leaderboard');
         const leaderboardList = document.getElementById('leaderboard-list');
         const logoutButton = document.getElementById('logout-button');
         const bird = document.getElementById('bird');
+        const restartButton = document.createElement('button');
+        const leaderboardButton = document.createElement('button');
+        const closeLeaderboardButton = document.getElementById('close-leaderboard');
+
+        // Инициализация кнопок
+        restartButton.textContent = 'Restart';
+        restartButton.id = 'restart-button';
+        restartButton.onclick = startGame;
+
+        leaderboardButton.textContent = 'Leaderboard';
+        leaderboardButton.id = 'leaderboard-button';
+        leaderboardButton.onclick = () => leaderboard.style.display = 'block';
+
+        closeLeaderboardButton.onclick = () => leaderboard.style.display = 'none';
 
         // Показать форму регистрации
-        window.showRegisterForm = function() {
+        window.showRegisterForm = function () {
             loginForm.style.display = 'none';
             registerForm.style.display = 'block';
         };
 
         // Показать форму логина
-        window.showLoginForm = function() {
+        window.showLoginForm = function () {
             registerForm.style.display = 'none';
             loginForm.style.display = 'block';
         };
 
         // Регистрация нового пользователя
-        window.register = function() {
+        window.register = function () {
             const email = document.getElementById('register-username').value + "@knbgame.com";
             const password = document.getElementById('register-password').value;
 
@@ -146,7 +182,7 @@
         };
 
         // Логин
-        window.login = function() {
+        window.login = function () {
             const email = document.getElementById('login-username').value + "@knbgame.com";
             const password = document.getElementById('login-password').value;
 
@@ -208,48 +244,45 @@
                 });
         }
 
-        // Механика игры Flappy Bird
+        // Игровая логика
         function startGame() {
-            score = 0;
-            birdPosition = 200;
-            pipes = [];
-            clearInterval(gameInterval);
-            clearInterval(pipeInterval);
+            resetGame();
+            isGameActive = true;
 
-            gameInterval = setInterval(updateGame, 20);
-            pipeInterval = setInterval(createPipe, 2000);
+            gameInterval = setInterval(() => {
+                if (!isGameActive) return;
+                birdPosition += gravity;
+                bird.style.top = birdPosition + 'px';
 
-            document.addEventListener('keydown', flap);
+                if (birdPosition <= 0 || birdPosition >= 440 || checkCollision()) {
+                    endGame();
+                }
+
+                updatePipes();
+            }, 20);
+
+            pipeInterval = setInterval(createPipe, 1500);
+            document.addEventListener('keydown', handleFlap);
+            document.addEventListener('click', handleFlap);
         }
 
-        function stopGame() {
-            clearInterval(gameInterval);
-            clearInterval(pipeInterval);
-            document.removeEventListener('keydown', flap);
-        }
-
-        function updateGame() {
-            birdPosition += gravity;
-            bird.style.top = birdPosition + 'px';
-
-            // Проверка столкновений
-            if (birdPosition <= 0 || birdPosition >= 440 || checkCollision()) {
-                endGame();
-                return;
+        function handleFlap() {
+            if (isGameActive) {
+                birdPosition -= 30;
+                bird.style.top = birdPosition + 'px';
             }
+        }
 
-            // Движение труб
+        function updatePipes() {
             pipes.forEach(pipe => {
-                pipe.x -= 2;
+                pipe.x -= 3;
                 pipe.element.style.left = pipe.x + 'px';
 
                 if (pipe.x + 60 === 50) {
                     score++;
-                    updateScoreDisplay();
+                    scoreDisplay.textContent = `Score: ${score}`;
                 }
             });
-
-            // Удаление труб за пределами экрана
             pipes = pipes.filter(pipe => pipe.x > -60);
         }
 
@@ -276,10 +309,6 @@
             pipes.push({ x: 320, element: bottomPipe });
         }
 
-        function flap() {
-            birdPosition -= 40;
-        }
-
         function checkCollision() {
             for (const pipe of pipes) {
                 const pipeRect = pipe.element.getBoundingClientRect();
@@ -298,8 +327,11 @@
         }
 
         function endGame() {
-            stopGame();
-            alert(`Game Over! Your score: ${score}`);
+            isGameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(pipeInterval);
+            document.removeEventListener('keydown', handleFlap);
+            document.removeEventListener('click', handleFlap);
 
             if (score > highScore) {
                 highScore = score;
@@ -309,6 +341,25 @@
                     updateLeaderboard();
                 });
             }
+
+            gameContent.appendChild(restartButton);
+        }
+
+        function resetGame() {
+            score = 0;
+            birdPosition = 200;
+            pipes = [];
+            bird.style.top = '200px';
+            scoreDisplay.textContent = 'Score: 0';
+            gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+        }
+
+        function stopGame() {
+            isGameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(pipeInterval);
+            document.removeEventListener('keydown', handleFlap);
+            document.removeEventListener('click', handleFlap);
         }
 
         // Проверка авторизации при загрузке страницы
@@ -345,11 +396,13 @@
         <div id="game-content" style="display: none;">
             <div id="bird"></div>
             <div id="score">Score: 0</div>
-            <div id="leaderboard">
-                <h3>Leaderboard</h3>
-                <ul id="leaderboard-list"></ul>
-            </div>
+            <button id="leaderboard-button">Leaderboard</button>
             <button id="logout-button">Выйти</button>
+        </div>
+        <div id="leaderboard">
+            <h3>Leaderboard</h3>
+            <ul id="leaderboard-list"></ul>
+            <button id="close-leaderboard">Close</button>
         </div>
     </div>
 </body>
