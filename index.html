@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KNB Clicker Challenge</title>
+    <title>Flappy Bird</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,19 +20,36 @@
             max-width: 400px;
             margin: 0 auto;
         }
-        #click-button {
-            padding: 20px;
+        #game-content {
+            position: relative;
+            width: 320px;
+            height: 480px;
+            margin: 0 auto;
+            background-color: #70c5ce;
+            overflow: hidden;
+        }
+        #bird {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: yellow;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 50%;
+        }
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background-color: green;
+        }
+        #score {
             font-size: 24px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 10px;
             margin-top: 20px;
         }
-        #score, #high-score {
-            font-size: 24px;
+        #leaderboard {
             margin-top: 20px;
+            text-align: left;
         }
         #login-form, #register-form {
             margin-top: 20px;
@@ -50,10 +67,6 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-        }
-        #leaderboard {
-            margin-top: 20px;
-            text-align: left;
         }
         #logout-button {
             margin-top: 20px;
@@ -84,16 +97,20 @@
         let currentUser = null;
         let score = 0;
         let highScore = 0;
+        let gameInterval;
+        let pipeInterval;
+        let birdPosition = 200;
+        let gravity = 2;
+        let pipes = [];
 
         // Элементы DOM
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         const gameContent = document.getElementById('game-content');
         const scoreDisplay = document.getElementById('score');
-        const highScoreDisplay = document.getElementById('high-score');
         const leaderboardList = document.getElementById('leaderboard-list');
-        const clickButton = document.getElementById('click-button');
         const logoutButton = document.getElementById('logout-button');
+        const bird = document.getElementById('bird');
 
         // Показать форму регистрации
         window.showRegisterForm = function() {
@@ -117,8 +134,7 @@
                     const user = userCredential.user;
                     setDoc(doc(db, 'users', user.uid), {
                         username: document.getElementById('register-username').value,
-                        highScore: 0,
-                        currentScore: 0
+                        highScore: 0
                     }).then(() => {
                         alert('Registration successful! Please login.');
                         showLoginForm();
@@ -140,6 +156,7 @@
                     loadUserData();
                     loginForm.style.display = 'none';
                     gameContent.style.display = 'block';
+                    startGame();
                 })
                 .catch((error) => {
                     alert(error.message);
@@ -154,6 +171,7 @@
                     currentUser = null;
                     loginForm.style.display = 'block';
                     gameContent.style.display = 'none';
+                    stopGame();
                 })
                 .catch((error) => {
                     alert(error.message);
@@ -166,7 +184,6 @@
                 .then((doc) => {
                     if (doc.exists()) {
                         highScore = doc.data().highScore;
-                        score = doc.data().currentScore || 0;
                         updateScoreDisplay();
                     }
                 });
@@ -176,7 +193,6 @@
         // Обновление счета
         function updateScoreDisplay() {
             scoreDisplay.textContent = `Score: ${score}`;
-            highScoreDisplay.textContent = `High Score: ${highScore}`;
         }
 
         // Обновление таблицы лидеров
@@ -192,21 +208,108 @@
                 });
         }
 
-        // Обработка кликов
-        clickButton.addEventListener('click', () => {
-            score += 1;
-            if (score > highScore) {
-                highScore = score;
+        // Механика игры Flappy Bird
+        function startGame() {
+            score = 0;
+            birdPosition = 200;
+            pipes = [];
+            clearInterval(gameInterval);
+            clearInterval(pipeInterval);
+
+            gameInterval = setInterval(updateGame, 20);
+            pipeInterval = setInterval(createPipe, 2000);
+
+            document.addEventListener('keydown', flap);
+        }
+
+        function stopGame() {
+            clearInterval(gameInterval);
+            clearInterval(pipeInterval);
+            document.removeEventListener('keydown', flap);
+        }
+
+        function updateGame() {
+            birdPosition += gravity;
+            bird.style.top = birdPosition + 'px';
+
+            // Проверка столкновений
+            if (birdPosition <= 0 || birdPosition >= 440 || checkCollision()) {
+                endGame();
+                return;
             }
 
-            updateDoc(doc(db, 'users', currentUser.uid), {
-                currentScore: score,
-                highScore: highScore
-            }).then(() => {
-                updateScoreDisplay();
-                updateLeaderboard();
+            // Движение труб
+            pipes.forEach(pipe => {
+                pipe.x -= 2;
+                pipe.element.style.left = pipe.x + 'px';
+
+                if (pipe.x + 60 === 50) {
+                    score++;
+                    updateScoreDisplay();
+                }
             });
-        });
+
+            // Удаление труб за пределами экрана
+            pipes = pipes.filter(pipe => pipe.x > -60);
+        }
+
+        function createPipe() {
+            const gap = 120;
+            const topHeight = Math.random() * (300 - 100) + 100;
+
+            const topPipe = document.createElement('div');
+            topPipe.className = 'pipe';
+            topPipe.style.height = topHeight + 'px';
+            topPipe.style.top = '0';
+            topPipe.style.left = '320px';
+
+            const bottomPipe = document.createElement('div');
+            bottomPipe.className = 'pipe';
+            bottomPipe.style.height = (480 - topHeight - gap) + 'px';
+            bottomPipe.style.bottom = '0';
+            bottomPipe.style.left = '320px';
+
+            gameContent.appendChild(topPipe);
+            gameContent.appendChild(bottomPipe);
+
+            pipes.push({ x: 320, element: topPipe });
+            pipes.push({ x: 320, element: bottomPipe });
+        }
+
+        function flap() {
+            birdPosition -= 40;
+        }
+
+        function checkCollision() {
+            for (const pipe of pipes) {
+                const pipeRect = pipe.element.getBoundingClientRect();
+                const birdRect = bird.getBoundingClientRect();
+
+                if (
+                    birdRect.left < pipeRect.right &&
+                    birdRect.right > pipeRect.left &&
+                    birdRect.top < pipeRect.bottom &&
+                    birdRect.bottom > pipeRect.top
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function endGame() {
+            stopGame();
+            alert(`Game Over! Your score: ${score}`);
+
+            if (score > highScore) {
+                highScore = score;
+                updateDoc(doc(db, 'users', currentUser.uid), {
+                    highScore: highScore
+                }).then(() => {
+                    updateLeaderboard();
+                });
+            }
+        }
 
         // Проверка авторизации при загрузке страницы
         onAuthStateChanged(auth, (user) => {
@@ -215,16 +318,18 @@
                 loadUserData();
                 loginForm.style.display = 'none';
                 gameContent.style.display = 'block';
+                startGame();
             } else {
                 loginForm.style.display = 'block';
                 gameContent.style.display = 'none';
+                stopGame();
             }
         });
     </script>
 </head>
 <body>
     <div id="game">
-        <h1>KNB Clicker Challenge</h1>
+        <h1>Flappy Bird</h1>
         <div id="login-form">
             <input type="text" id="login-username" placeholder="Username">
             <input type="password" id="login-password" placeholder="Password">
@@ -238,9 +343,8 @@
             <button onclick="showLoginForm()">Back to Login</button>
         </div>
         <div id="game-content" style="display: none;">
-            <button id="click-button">Click Me!</button>
+            <div id="bird"></div>
             <div id="score">Score: 0</div>
-            <div id="high-score">High Score: 0</div>
             <div id="leaderboard">
                 <h3>Leaderboard</h3>
                 <ul id="leaderboard-list"></ul>
