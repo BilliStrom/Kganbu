@@ -2,103 +2,146 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KNB Flappy Bird</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f0f0;
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            background: #2c3e50;
+            touch-action: manipulation;
         }
+
         #game {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            width: 100%;
             max-width: 400px;
             margin: 0 auto;
+            height: 100vh;
         }
+
         #game-content {
             position: relative;
-            width: 320px;
-            height: 480px;
-            margin: 0 auto;
-            background-color: #70c5ce;
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%);
             overflow: hidden;
         }
+
         #bird {
             position: absolute;
             width: 40px;
             height: 40px;
-            background-color: yellow;
             left: 50px;
             top: 50%;
             transform: translateY(-50%);
-            border-radius: 50%;
-            transition: top 0.1s;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><text x="50%" y="55%" font-size="40" text-anchor="middle" fill="%23000">KNB</text></svg>') no-repeat;
+            background-size: contain;
+            transition: transform 0.1s;
+            z-index: 2;
         }
+
         .pipe {
             position: absolute;
             width: 60px;
-            background-color: green;
+            background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
         }
+
         #score {
-            font-size: 24px;
-            margin-top: 20px;
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
             color: white;
-            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 2;
         }
+
+        .auth-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .game-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            width: 100%;
+        }
+
         #leaderboard {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            z-index: 2;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 300px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
         }
-        .controls {
-            margin-top: 20px;
-        }
-        #restart-button {
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #leaderboard-button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #close-leaderboard {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
+
+        @media (max-width: 480px) {
+            #game-content {
+                height: 100vh;
+            }
+            #bird {
+                width: 30px;
+                height: 30px;
+                left: 30px;
+            }
+            .pipe {
+                width: 40px;
+            }
         }
     </style>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
+</head>
+<body>
+    <div id="game">
+        <div id="login-form">
+            <div class="auth-box">
+                <input type="text" id="login-username" placeholder="Username">
+                <input type="password" id="login-password" placeholder="Password">
+                <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
+                <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
+            </div>
+        </div>
 
-        // Конфигурация Firebase
+        <div id="game-content" style="display: none;">
+            <div id="bird"></div>
+            <div id="score">0</div>
+            <button class="game-button" id="leaderboard-button" style="background: #3498db;">Leaderboard</button>
+            <button class="game-button" id="logout-button" style="background: #e74c3c;">Logout</button>
+        </div>
+
+        <div id="leaderboard">
+            <h3>🏆 Leaderboard</h3>
+            <ul id="leaderboard-list" style="list-style: none; padding: 0;"></ul>
+            <button class="game-button" id="close-leaderboard" style="background: #2ecc71;">Close</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // ↓↓↓ ЗАМЕНИТЕ ЭТИ ДАННЫЕ НА СВОИ ИЗ FIREBASE ↓↓↓
         const firebaseConfig = {
       apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
   authDomain: "knb-clicker-game.firebaseapp.com",
@@ -108,12 +151,31 @@
   appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
   };
 
-        // Инициализация Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc, 
+            updateDoc, 
+            collection, 
+            query, 
+            orderBy, 
+            limit, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Переменные игры
         let currentUser = null;
         let score = 0;
         let highScore = 0;
@@ -124,137 +186,125 @@
         let isGameActive = false;
         let pipes = [];
 
-        // Элементы DOM
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const gameContent = document.getElementById('game-content');
-        const scoreDisplay = document.getElementById('score');
-        const leaderboard = document.getElementById('leaderboard');
-        const leaderboardList = document.getElementById('leaderboard-list');
-        const logoutButton = document.getElementById('logout-button');
-        const bird = document.getElementById('bird');
-        const restartButton = document.createElement('button');
-        const leaderboardButton = document.createElement('button');
-        const closeLeaderboardButton = document.getElementById('close-leaderboard');
-
-        // Инициализация кнопок
-        restartButton.textContent = 'Restart';
-        restartButton.id = 'restart-button';
-        restartButton.onclick = startGame;
-
-        leaderboardButton.textContent = 'Leaderboard';
-        leaderboardButton.id = 'leaderboard-button';
-        leaderboardButton.onclick = () => leaderboard.style.display = 'block';
-
-        closeLeaderboardButton.onclick = () => leaderboard.style.display = 'none';
-
-        // Показать форму регистрации
-        window.showRegisterForm = function () {
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
+        const elements = {
+            loginForm: document.getElementById('login-form'),
+            gameContent: document.getElementById('game-content'),
+            scoreDisplay: document.getElementById('score'),
+            leaderboard: document.getElementById('leaderboard'),
+            leaderboardList: document.getElementById('leaderboard-list'),
+            bird: document.getElementById('bird'),
+            leaderboardButton: document.getElementById('leaderboard-button'),
+            logoutButton: document.getElementById('logout-button'),
+            closeLeaderboard: document.getElementById('close-leaderboard')
         };
 
-        // Показать форму логина
-        window.showLoginForm = function () {
-            registerForm.style.display = 'none';
-            loginForm.style.display = 'block';
+        // Event Listeners
+        elements.leaderboardButton.addEventListener('click', () => elements.leaderboard.style.display = 'block');
+        elements.closeLeaderboard.addEventListener('click', () => elements.leaderboard.style.display = 'none');
+        elements.logoutButton.addEventListener('click', handleLogout);
+        document.addEventListener('keydown', handleFlap);
+        document.addEventListener('touchstart', handleFlap, { passive: false });
+
+        window.showRegisterForm = () => {
+            elements.loginForm.innerHTML = `
+                <div class="auth-box">
+                    <input type="text" id="register-username" placeholder="Username">
+                    <input type="password" id="register-password" placeholder="Password">
+                    <button class="game-button" style="background: #3498db;" onclick="register()">Register</button>
+                    <button class="game-button" style="background: #95a5a6;" onclick="showLoginForm()">Back to Login</button>
+                </div>
+            `;
         };
 
-        // Регистрация нового пользователя
-        window.register = function () {
-            const email = document.getElementById('register-username').value + "@knbgame.com";
-            const password = document.getElementById('register-password').value;
-
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    setDoc(doc(db, 'users', user.uid), {
-                        username: document.getElementById('register-username').value,
-                        highScore: 0
-                    }).then(() => {
-                        alert('Registration successful! Please login.');
-                        showLoginForm();
-                    });
-                })
-                .catch((error) => {
-                    alert(error.message);
-                });
+        window.showLoginForm = () => {
+            elements.loginForm.innerHTML = `
+                <div class="auth-box">
+                    <input type="text" id="login-username" placeholder="Username">
+                    <input type="password" id="login-password" placeholder="Password">
+                    <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
+                    <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
+                </div>
+            `;
         };
 
-        // Логин
-        window.login = function () {
-            const email = document.getElementById('login-username').value + "@knbgame.com";
+        window.login = async () => {
+            const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
+            const email = `${username}@knbgame.com`;
 
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    currentUser = userCredential.user;
-                    loadUserData();
-                    loginForm.style.display = 'none';
-                    gameContent.style.display = 'block';
-                    startGame();
-                })
-                .catch((error) => {
-                    alert(error.message);
-                });
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                currentUser = userCredential.user;
+                await loadUserData();
+                elements.loginForm.style.display = 'none';
+                elements.gameContent.style.display = 'block';
+                startGame();
+            } catch (error) {
+                alert(error.message);
+            }
         };
 
-        // Выход из аккаунта
-        logoutButton.addEventListener('click', () => {
-            signOut(auth)
-                .then(() => {
-                    alert('Вы успешно вышли из аккаунта.');
-                    currentUser = null;
-                    loginForm.style.display = 'block';
-                    gameContent.style.display = 'none';
-                    stopGame();
-                })
-                .catch((error) => {
-                    alert(error.message);
-                });
-        });
+        window.register = async () => {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const email = `${username}@knbgame.com`;
 
-        // Загрузка данных пользователя
-        function loadUserData() {
-            getDoc(doc(db, 'users', currentUser.uid))
-                .then((doc) => {
-                    if (doc.exists()) {
-                        highScore = doc.data().highScore;
-                        updateScoreDisplay();
-                    }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                    username,
+                    highScore: 0
                 });
+                alert('Registration successful! Please login.');
+                showLoginForm();
+            } catch (error) {
+                alert(error.message);
+            }
+        };
+
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                currentUser = null;
+                elements.loginForm.style.display = 'block';
+                elements.gameContent.style.display = 'none';
+                stopGame();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function loadUserData() {
+            const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
+            if (docSnap.exists()) {
+                highScore = docSnap.data().highScore;
+                elements.scoreDisplay.textContent = `High: ${highScore} | Current: 0`;
+            }
             updateLeaderboard();
         }
 
-        // Обновление счета
-        function updateScoreDisplay() {
-            scoreDisplay.textContent = `Score: ${score}`;
-        }
-
-        // Обновление таблицы лидеров
-        function updateLeaderboard() {
+        async function updateLeaderboard() {
             const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
-            getDocs(q)
-                .then((querySnapshot) => {
-                    leaderboardList.innerHTML = '';
-                    querySnapshot.forEach((doc) => {
-                        const user = doc.data();
-                        leaderboardList.innerHTML += `<li>${user.username}: ${user.highScore}</li>`;
-                    });
-                });
+            const querySnapshot = await getDocs(q);
+            elements.leaderboardList.innerHTML = querySnapshot.docs
+                .map((doc, index) => `
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        ${index + 1}. ${doc.data().username} - ${doc.data().highScore}
+                    </li>
+                `).join('');
         }
 
-        // Игровая логика
         function startGame() {
             resetGame();
             isGameActive = true;
+            animateBird();
 
             gameInterval = setInterval(() => {
                 if (!isGameActive) return;
                 birdPosition += gravity;
-                bird.style.top = birdPosition + 'px';
+                elements.bird.style.top = `${birdPosition}px`;
 
-                if (birdPosition <= 0 || birdPosition >= 440 || checkCollision()) {
+                if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
                     endGame();
                 }
 
@@ -262,148 +312,112 @@
             }, 20);
 
             pipeInterval = setInterval(createPipe, 1500);
-            document.addEventListener('keydown', handleFlap);
-            document.addEventListener('click', handleFlap);
         }
 
-        function handleFlap() {
+        function handleFlap(e) {
+            if (e.type === 'touchstart') e.preventDefault();
             if (isGameActive) {
-                birdPosition -= 30;
-                bird.style.top = birdPosition + 'px';
+                birdPosition -= 35;
+                elements.bird.style.top = `${birdPosition}px`;
             }
+        }
+
+        function animateBird() {
+            elements.bird.style.transform = `translateY(-50%) rotate(${Date.now() % 200 < 100 ? -20 : 10}deg)`;
+            if(isGameActive) requestAnimationFrame(animateBird);
+        }
+
+        function createPipe() {
+            const gap = 150;
+            const minHeight = 80;
+            const maxHeight = 350;
+            const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+
+            const topPipe = document.createElement('div');
+            topPipe.className = 'pipe';
+            topPipe.style.height = `${topHeight}px`;
+            topPipe.style.top = '0';
+            topPipe.style.left = '100%';
+
+            const bottomPipe = document.createElement('div');
+            bottomPipe.className = 'pipe';
+            bottomPipe.style.height = `${600 - topHeight - gap}px`;
+            bottomPipe.style.bottom = '0';
+            bottomPipe.style.left = '100%';
+
+            elements.gameContent.append(topPipe, bottomPipe);
+            pipes.push({ x: 400, element: topPipe }, { x: 400, element: bottomPipe });
         }
 
         function updatePipes() {
             pipes.forEach(pipe => {
                 pipe.x -= 3;
-                pipe.element.style.left = pipe.x + 'px';
+                pipe.element.style.left = `${pipe.x}px`;
 
                 if (pipe.x + 60 === 50) {
                     score++;
-                    scoreDisplay.textContent = `Score: ${score}`;
+                    elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
                 }
             });
             pipes = pipes.filter(pipe => pipe.x > -60);
         }
 
-        function createPipe() {
-            const gap = 120;
-            const topHeight = Math.random() * (300 - 100) + 100;
-
-            const topPipe = document.createElement('div');
-            topPipe.className = 'pipe';
-            topPipe.style.height = topHeight + 'px';
-            topPipe.style.top = '0';
-            topPipe.style.left = '320px';
-
-            const bottomPipe = document.createElement('div');
-            bottomPipe.className = 'pipe';
-            bottomPipe.style.height = (480 - topHeight - gap) + 'px';
-            bottomPipe.style.bottom = '0';
-            bottomPipe.style.left = '320px';
-
-            gameContent.appendChild(topPipe);
-            gameContent.appendChild(bottomPipe);
-
-            pipes.push({ x: 320, element: topPipe });
-            pipes.push({ x: 320, element: bottomPipe });
-        }
-
         function checkCollision() {
-            for (const pipe of pipes) {
+            return pipes.some(pipe => {
                 const pipeRect = pipe.element.getBoundingClientRect();
-                const birdRect = bird.getBoundingClientRect();
-
-                if (
+                const birdRect = elements.bird.getBoundingClientRect();
+                return (
                     birdRect.left < pipeRect.right &&
                     birdRect.right > pipeRect.left &&
                     birdRect.top < pipeRect.bottom &&
                     birdRect.bottom > pipeRect.top
-                ) {
-                    return true;
-                }
-            }
-            return false;
+                );
+            });
         }
 
-        function endGame() {
+        async function endGame() {
             isGameActive = false;
             clearInterval(gameInterval);
             clearInterval(pipeInterval);
-            document.removeEventListener('keydown', handleFlap);
-            document.removeEventListener('click', handleFlap);
 
             if (score > highScore) {
                 highScore = score;
-                updateDoc(doc(db, 'users', currentUser.uid), {
-                    highScore: highScore
-                }).then(() => {
-                    updateLeaderboard();
-                });
+                await updateDoc(doc(db, 'users', currentUser.uid), { highScore });
+                updateLeaderboard();
             }
 
-            gameContent.appendChild(restartButton);
+            alert(`Game Over! Score: ${score}`);
+            startGame();
         }
 
         function resetGame() {
             score = 0;
             birdPosition = 200;
             pipes = [];
-            bird.style.top = '200px';
-            scoreDisplay.textContent = 'Score: 0';
-            gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+            elements.bird.style.top = '200px';
+            elements.scoreDisplay.textContent = `High: ${highScore} | Current: 0`;
+            elements.gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
         }
 
         function stopGame() {
             isGameActive = false;
             clearInterval(gameInterval);
             clearInterval(pipeInterval);
-            document.removeEventListener('keydown', handleFlap);
-            document.removeEventListener('click', handleFlap);
         }
 
-        // Проверка авторизации при загрузке страницы
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 loadUserData();
-                loginForm.style.display = 'none';
-                gameContent.style.display = 'block';
+                elements.loginForm.style.display = 'none';
+                elements.gameContent.style.display = 'block';
                 startGame();
             } else {
-                loginForm.style.display = 'block';
-                gameContent.style.display = 'none';
+                elements.loginForm.style.display = 'block';
+                elements.gameContent.style.display = 'none';
                 stopGame();
             }
         });
     </script>
-</head>
-<body>
-    <div id="game">
-        <h1>Flappy Bird</h1>
-        <div id="login-form">
-            <input type="text" id="login-username" placeholder="Username">
-            <input type="password" id="login-password" placeholder="Password">
-            <button onclick="login()">Login</button>
-            <button onclick="showRegisterForm()">Register</button>
-        </div>
-        <div id="register-form" style="display: none;">
-            <input type="text" id="register-username" placeholder="Username">
-            <input type="password" id="register-password" placeholder="Password">
-            <button onclick="register()">Register</button>
-            <button onclick="showLoginForm()">Back to Login</button>
-        </div>
-        <div id="game-content" style="display: none;">
-            <div id="bird"></div>
-            <div id="score">Score: 0</div>
-            <button id="leaderboard-button">Leaderboard</button>
-            <button id="logout-button">Выйти</button>
-        </div>
-        <div id="leaderboard">
-            <h3>Leaderboard</h3>
-            <ul id="leaderboard-list"></ul>
-            <button id="close-leaderboard">Close</button>
-        </div>
-    </div>
 </body>
 </html>
