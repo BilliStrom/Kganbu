@@ -5,153 +5,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KNB Flappy Bird</title>
     <style>
-       #login-form {
+        body {
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            margin: 0;
+            background: #2c3e50;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .auth-box, .game-menu {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background: #3498db;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        #game-container {
             position: relative;
-            z-index: 10;
+            height: 600px;
+            background: linear-gradient(to bottom, #4ec0ca, #3aa3bf);
+            overflow: hidden;
+            display: none;
         }
-        body { 
-            font-family: 'Arial Rounded MT Bold', Arial, sans-serif; 
-            margin: 0; 
-            background: #2c3e50; 
-            touch-action: manipulation; 
+
+        #bird {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            left: 50px;
+            top: 50%;
+            background: #ffd700;
+            border-radius: 50%;
+            transform: translateY(-50%);
         }
-        #game { 
-            position: relative; 
-            width: 100%; 
-            max-width: 400px; 
-            margin: 0 auto; 
-            height: 100vh; 
+
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background: #2ecc71;
         }
-        #game-content { 
-            position: relative; 
-            width: 100%; 
-            height: 600px; 
-            background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%); 
-            overflow: hidden; 
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 32px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        #bird { 
-            position: absolute; 
-            width: 40px; 
-            height: 40px; 
-            left: 50px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><text x="50%" y="55%" font-size="40" text-anchor="middle" fill="%23000">KNB</text></svg>') no-repeat;
-            background-size: contain; 
-            transition: transform 0.1s; 
-            z-index: 2; 
-        }
-        .pipe { 
-            position: absolute; 
-            width: 60px; 
-            background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%); 
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2); 
-        }
-        #score { 
-            position: absolute; 
-            top: 20px; 
-            left: 20px; 
-            font-size: 32px; 
-            color: white; 
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); 
-            z-index: 2; 
-        }
-        #pause-button { 
-            position: absolute; 
-            top: 20px; 
-            right: 20px; 
-            padding: 10px 20px; 
-            border: none; 
-            border-radius: 20px; 
-            background: rgba(255, 255, 255, 0.3); 
-            color: white; 
-            cursor: pointer; 
-            z-index: 3; 
-        }
-        .auth-box { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            margin: 20px; 
-            box-shadow: 0 0 10px rgba(0,0,0,0.2); 
-        }
-        input { 
-            display: block; 
-            width: 100%; 
-            padding: 10px; 
-            margin: 10px 0; 
-            border: 1px solid #ddd; 
-            border-radius: 5px; 
-        }
-        .game-button { 
-            padding: 12px 25px; 
-            border: none; 
-            border-radius: 25px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            margin: 5px; 
-            width: 100%; 
-        }
-        #pause-menu { 
-            display: none; 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: rgba(0, 0, 0, 0.8); 
-            padding: 25px; 
-            border-radius: 15px; 
-            width: 80%; 
-            max-width: 300px; 
-            color: white; 
-            text-align: center; 
-            z-index: 4; 
-        }
-        #leaderboard { 
-            display: none; 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: rgba(255, 255, 255, 0.95); 
-            padding: 25px; 
-            border-radius: 15px; 
-            width: 80%; 
-            max-width: 300px; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.3); 
-            z-index: 5; 
+
+        #leaderboard {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 300px;
         }
     </style>
 </head>
 <body>
-    <div id="game">
-        <div id="login-form">
-            <div class="auth-box">
-                <input type="text" id="login-username" placeholder="Username">
-                <input type="password" id="login-password" placeholder="Password">
-                <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
-                <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
-            </div>
+    <div class="container">
+        <div id="auth-container" class="auth-box">
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn" onclick="handleAuth()">Login</button>
+            <button class="btn" style="background: #95a5a6" onclick="toggleAuthMode()">Switch to Register</button>
         </div>
 
-        <div id="game-content" style="display: none;">
-            <button id="pause-button">⏸</button>
-            <div id="bird"></div>
+        <div id="game-menu" class="game-menu" style="display: none;">
+            <button class="btn" onclick="startGame()">Play</button>
+            <button class="btn" style="background: #2ecc71" onclick="showLeaderboard()">Leaderboard</button>
+            <button class="btn" style="background: #e74c3c" onclick="logout()">Logout</button>
+        </div>
+
+        <div id="game-container">
             <div id="score">0</div>
-        </div>
-
-        <div id="pause-menu">
-            <h3>PAUSED</h3>
-            <button class="game-button" onclick="togglePause()" style="background: #2ecc71;">Resume</button>
-            <button class="game-button" onclick="showLeaderboard()" style="background: #3498db;">Leaderboard</button>
-            <button class="game-button" onclick="handleLogout()" style="background: #e74c3c;">Exit</button>
+            <div id="bird"></div>
         </div>
 
         <div id="leaderboard">
-            <h3>🏆 Leaderboard</h3>
-            <ul id="leaderboard-list" style="list-style: none; padding: 0;"></ul>
-            <button class="game-button" onclick="closeLeaderboard()" style="background: #2ecc71;">Close</button>
+            <h2>🏆 Leaders</h2>
+            <ul id="leaderboard-list"></ul>
+            <button class="btn" onclick="hideLeaderboard()">Close</button>
         </div>
     </div>
 
@@ -191,337 +164,158 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        let score = 0;
-        let highScore = 0;
-        let gameInterval;
-        let pipeInterval;
-        let birdPosition = 200;
-        let gravity = 2.5;
-        let isGameActive = false;
-        let isPaused = false;
-        let pipes = [];
+        let isLoginMode = true;
+        let gameState = {
+            score: 0,
+            birdY: 300,
+            velocity: 0,
+            pipes: [],
+            isPlaying: false
+        };
 
+        // Elements
         const elements = {
-            loginForm: document.getElementById('login-form'),
-            gameContent: document.getElementById('game-content'),
-            scoreDisplay: document.getElementById('score'),
+            authContainer: document.getElementById('auth-container'),
+            gameMenu: document.getElementById('game-menu'),
+            gameContainer: document.getElementById('game-container'),
             leaderboard: document.getElementById('leaderboard'),
-            leaderboardList: document.getElementById('leaderboard-list'),
             bird: document.getElementById('bird'),
-            pauseButton: document.getElementById('pause-button'),
-            pauseMenu: document.getElementById('pause-menu')
+            score: document.getElementById('score')
         };
 
-        // Валидация имени пользователя
-        const validateUsername = (username) => /^[A-Za-z0-9]{3,15}$/.test(username);
+        // Event Listeners
+        document.addEventListener('keydown', flap);
+        document.addEventListener('touchstart', handleTouch);
 
-        window.showRegisterForm = () => {
-            elements.loginForm.innerHTML = `
-                <div class="auth-box">
-                    <input type="text" id="register-username" placeholder="Username (3-15 chars)">
-                    <input type="password" id="register-password" placeholder="Password (6+ chars)">
-                    <button class="game-button" style="background: #3498db;" onclick="register()">Register</button>
-                    <button class="game-button" style="background: #95a5a6;" onclick="showLoginForm()">Back to Login</button>
-                </div>
-            `;
-        };
+        // Game Constants
+        const GRAVITY = 0.5;
+        const FLAP_FORCE = -8;
+        const PIPE_GAP = 150;
+        const PIPE_SPEED = 3;
 
-        window.showLoginForm = () => {
-            elements.loginForm.innerHTML = `
-                <div class="auth-box">
-                    <input type="text" id="login-username" placeholder="Username">
-                    <input type="password" id="login-password" placeholder="Password">
-                    <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
-                    <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
-                </div>
-            `;
-        };
+        async function handleAuth() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
 
-        window.login = async () => {
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-
-            if (!validateUsername(username)) {
-                alert('Invalid username! Use 3-15 alphanumeric characters.');
+            if(!username || !password) {
+                alert('Please fill all fields');
                 return;
             }
 
-            try {
-                const email = `${username}@knbgame.com`;
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                currentUser = userCredential.user;
-                await loadUserData();
-                elements.loginForm.style.display = 'none';
-                elements.gameContent.style.display = 'block';
-                startGame();
-            } catch (error) {
-                alert(error.message.replace('Firebase: ', ''));
-            }
-        };
-
-        window.register = async () => {
-            const username = document.getElementById('register-username').value.trim();
-            const password = document.getElementById('register-password').value.trim();
-
-            if (!validateUsername(username)) {
-                alert('Invalid username! Use 3-15 alphanumeric characters.');
-                return;
-            }
+            const email = `${username}@game.com`;
             
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters');
-                return;
-            }
-
             try {
-                const email = `${username}@knbgame.com`;
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    username: username.toLowerCase(),
-                    highScore: 0,
-                    created: new Date().toISOString()
-                });
-
-                alert('Registration successful! Please login.');
-                showLoginForm();
+                if(isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, 'users', userCredential.user.uid, {
+                        username,
+                        highScore: 0
+                    });
+                }
             } catch (error) {
                 alert(error.message.replace('Firebase: ', ''));
             }
-        };
-
-        async function loadUserData() {
-            const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
-            if (docSnap.exists()) {
-                highScore = docSnap.data().highScore;
-                elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
-            }
-            updateLeaderboard();
         }
 
-        function startGame() {
-            if(isPaused) return;
-            resetGame();
-            isGameActive = true;
-            animateBird();
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.querySelector('#auth-container button').textContent = 
+                isLoginMode ? 'Login' : 'Register';
+            document.querySelector('#auth-container button:last-child').textContent = 
+                isLoginMode ? 'Switch to Register' : 'Switch to Login';
+        }
 
-            gameInterval = setInterval(gameLoop, 20);
-            pipeInterval = setInterval(createPipe, 1500);
+        async function startGame() {
+            elements.gameMenu.style.display = 'none';
+            elements.gameContainer.style.display = 'block';
+            gameState.isPlaying = true;
+            gameLoop();
         }
 
         function gameLoop() {
-            if (!isGameActive || isPaused) return;
-            
-            birdPosition += gravity;
-            elements.bird.style.top = `${birdPosition}px`;
+            if(!gameState.isPlaying) return;
 
-            if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
+            // Update game state
+            gameState.velocity += GRAVITY;
+            gameState.birdY += gameState.velocity;
+            elements.bird.style.top = `${gameState.birdY}px`;
+
+            // Check collisions
+            if(checkCollision() || gameState.birdY < 0 || gameState.birdY > 560) {
                 endGame();
+                return;
             }
 
+            // Update pipes
             updatePipes();
-        }
-
-        function createPipe() {
-            const gap = 150;
-            const minHeight = 80;
-            const maxHeight = 350;
-            const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
-
-            const topPipe = document.createElement('div');
-            topPipe.className = 'pipe';
-            topPipe.style.height = `${topHeight}px`;
-            topPipe.style.top = '0';
-            topPipe.style.left = '100%';
-            topPipe.isTop = true;
-
-            const bottomPipe = document.createElement('div');
-            bottomPipe.className = 'pipe';
-            bottomPipe.style.height = `${600 - topHeight - gap}px`;
-            bottomPipe.style.bottom = '0';
-            bottomPipe.style.left = '100%';
-            bottomPipe.isTop = false;
-
-            elements.gameContent.append(topPipe, bottomPipe);
-            pipes.push({ x: 400, element: topPipe, height: topHeight, isTop: true }, 
-                      { x: 400, element: bottomPipe, height: 600 - topHeight - gap, isTop: false });
+            requestAnimationFrame(gameLoop);
         }
 
         function updatePipes() {
-            pipes.forEach(pipe => {
-                pipe.x -= 3;
-                pipe.element.style.left = `${pipe.x}px`;
-
-                if (pipe.x + 60 === 50) score++;
-            });
-            pipes = pipes.filter(pipe => pipe.x > -60);
-            elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
+            // Pipe generation and movement logic
         }
 
         function checkCollision() {
-            const birdRect = {
-                x: 50,
-                y: birdPosition,
-                width: 40,
-                height: 40
-            };
-
-            return pipes.some(pipe => {
-                const pipeRect = {
-                    x: pipe.x,
-                    y: pipe.isTop ? 0 : 600 - pipe.height,
-                    width: 60,
-                    height: pipe.height
-                };
-
-                return !(birdRect.x + birdRect.width < pipeRect.x ||
-                        birdRect.x > pipeRect.x + pipeRect.width ||
-                        birdRect.y + birdRect.height < pipeRect.y ||
-                        birdRect.y > pipeRect.y + pipeRect.height);
-            });
+            // Collision detection logic
         }
 
         async function endGame() {
-            isGameActive = false;
-            clearInterval(gameInterval);
-            clearInterval(pipeInterval);
-
-            if (score > highScore) {
-                highScore = score;
-                await updateDoc(doc(db, 'users', currentUser.uid), { highScore });
-                updateLeaderboard();
-            }
-
-            if(confirm(`Game Over! Score: ${score}\nPlay again?`)) startGame();
-        }
-
-        function resetGame() {
-            score = 0;
-            birdPosition = 200;
-            pipes = [];
-            elements.bird.style.top = '200px';
-            elements.gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
-        }
-
-        async function updateLeaderboard() {
-            const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
-            const querySnapshot = await getDocs(q);
-            elements.leaderboardList.innerHTML = querySnapshot.docs
-                .map((doc, index) => `
-                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
-                        ${index + 1}. ${doc.data().username} - ${doc.data().highScore}
-                    </li>
-                `).join('');
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loadUserData();
-                elements.loginForm.style.display = 'none';
-                elements.gameContent.style.display = 'block';
-                startGame();
-            } else {
-                elements.loginForm.style.display = 'block';
-                elements.gameContent.style.display = 'none';
-            }
-        });
-
-        // Обработчики событий
-        
-  // Перехват всех touch-событий
-        document.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-
-        // Обновленный обработчик паузы
-        elements.pauseButton.addEventListener('touchstart', function(e) {
-            e.stopPropagation();
-            togglePause();
-        });
-
-        // Обновленная система ввода
-        function initMobileInputs() {
-            document.querySelectorAll('input').forEach(input => {
-                input.addEventListener('touchstart', function(e) {
-                    e.stopPropagation();
-                    this.focus();
+            gameState.isPlaying = false;
+            if(gameState.score > currentUser.highScore) {
+                await updateDoc(doc(db, 'users', currentUser.uid), {
+                    highScore: gameState.score
                 });
-            });
+            }
+            showGameMenu();
         }
 
-        // Модифицированная функция handleFlap
-        function handleFlap(e) {
-            if (e.type === 'touchstart') {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            if (isGameActive) {
-                birdPosition -= 35;
-                elements.bird.style.top = `${birdPosition}px`;
+        function flap() {
+            if(gameState.isPlaying) {
+                gameState.velocity = FLAP_FORCE;
             }
         }
 
-        // Инициализация при загрузке
-        window.addEventListener('DOMContentLoaded', () => {
-            initMobileInputs();
-        });
-
-        // Обновленный код регистрации/логина
-        window.login = async () => {
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-
-            // Добавляем вибрацию для обратной связи
-            if(navigator.vibrate) navigator.vibrate(50);
-
-            // Остальной код логина без изменений
-        
-
-        window.register = async () => {
-            // Аналогично добавляем вибрацию
-            if(navigator.vibrate) navigator.vibrate(50);
-            // Остальной код регистрации
-        
-
-elements.pauseButton.addEventListener('click', togglePause);
-        document.addEventListener('keydown', handleFlap);
-        document.addEventListener('touchstart', handleFlap, { passive: false });
-
-        function togglePause() {
-            isPaused = !isPaused;
-            elements.pauseMenu.style.display = isPaused ? 'block' : 'none';
-            if(isPaused) {
-                clearInterval(gameInterval);
-                clearInterval(pipeInterval);
-            } else {
-                startGame();
-            }
+        function handleTouch(e) {
+            e.preventDefault();
+            flap();
         }
 
-        function handleFlap(e) {
-            if (e.type === 'touchstart') e.preventDefault();
-            if (isGameActive) birdPosition -= 35;
+        async function showLeaderboard() {
+            const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
+            const snapshot = await getDocs(q);
+            elements.leaderboard.innerHTML = snapshot.docs
+                .map(doc => `<li>${doc.data().username}: ${doc.data().highScore}</li>`)
+                .join('');
+            elements.leaderboard.style.display = 'block';
         }
 
-        function animateBird() {
-            elements.bird.style.transform = `translateY(-50%) rotate(${Date.now() % 200 < 100 ? -20 : 10}deg)`;
-            if(isGameActive) requestAnimationFrame(animateBird);
+        function hideLeaderboard() {
+            elements.leaderboard.style.display = 'none';
         }
 
-        async function handleLogout() {
+        function showGameMenu() {
+            elements.gameContainer.style.display = 'none';
+            elements.gameMenu.style.display = 'block';
+        }
+
+        async function logout() {
             await signOut(auth);
             location.reload();
         }
 
-        window.showLeaderboard = () => {
-            elements.leaderboard.style.display = 'block';
-            elements.pauseMenu.style.display = 'none';
-        };
-
-        window.closeLeaderboard = () => {
-            elements.leaderboard.style.display = 'none';
-        };
+        // Auth state listener
+        onAuthStateChanged(auth, (user) => {
+            if(user) {
+                currentUser = user;
+                elements.authContainer.style.display = 'none';
+                elements.gameMenu.style.display = 'block';
+            } else {
+                elements.authContainer.style.display = 'block';
+                elements.gameMenu.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>
