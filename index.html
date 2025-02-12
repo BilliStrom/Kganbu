@@ -204,7 +204,7 @@
         let gameInterval;
         let pipeInterval;
         let birdPosition = 200;
-        let gravity = 5.1;
+        let gravity = 5.2;
         let isGameActive = false;
         let isPaused = false;
         let pipes = [];
@@ -348,7 +348,7 @@
                 birdPosition += gravity;
                 elements.bird.style.top = `${birdPosition}px`;
 
-                if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
+                if (birdPosition <= 0 || birdPosition >= 960 || checkCollision()) {
                     endGame();
                 }
 
