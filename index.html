@@ -2,320 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KNB Flappy Bird</title>
-    <style>
-        body {
-            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
-            margin: 0;
-            background: #2c3e50;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .auth-box, .game-menu {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 8px;
-            background: #3498db;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        #game-container {
-            position: relative;
-            height: 600px;
-            background: linear-gradient(to bottom, #4ec0ca, #3aa3bf);
-            overflow: hidden;
-            display: none;
-        }
-
-        #bird {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            left: 50px;
-            top: 50%;
-            background: #ffd700;
-            border-radius: 50%;
-            transform: translateY(-50%);
-        }
-
-        .pipe {
-            position: absolute;
-            width: 60px;
-            background: #2ecc71;
-        }
-
-        #score {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            font-size: 32px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        #leaderboard {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            width: 80%;
-            max-width: 300px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div id="auth-container" class="auth-box">
+    <div id="game-container">
+        <div id="login-form">
+            <h2>Flappy Bird</h2>
             <input type="text" id="username" placeholder="Username">
             <input type="password" id="password" placeholder="Password">
-            <button class="btn" onclick="handleAuth()">Login</button>
-            <button class="btn" style="background: #95a5a6" onclick="toggleAuthMode()">Switch to Register</button>
+            <button id="auth-button">Login</button>
+            <button id="switch-mode">Switch to Register</button>
         </div>
-
-        <div id="game-menu" class="game-menu" style="display: none;">
-            <button class="btn" onclick="startGame()">Play</button>
-            <button class="btn" style="background: #2ecc71" onclick="showLeaderboard()">Leaderboard</button>
-            <button class="btn" style="background: #e74c3c" onclick="logout()">Logout</button>
+        
+        <div id="game-menu" style="display: none;">
+            <button id="play-button">Play</button>
+            <button id="leaderboard-button">Leaderboard</button>
+            <button id="logout-button">Logout</button>
         </div>
-
-        <div id="game-container">
+        
+        <div id="game" style="display: none;">
             <div id="score">0</div>
             <div id="bird"></div>
         </div>
-
-        <div id="leaderboard">
-            <h2>🏆 Leaders</h2>
+        
+        <div id="leaderboard" style="display: none;">
+            <h2>Leaderboard</h2>
             <ul id="leaderboard-list"></ul>
-            <button class="btn" onclick="hideLeaderboard()">Close</button>
+            <button id="close-leaderboard">Close</button>
         </div>
     </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            getDoc, 
-            updateDoc, 
-            collection, 
-            query, 
-            orderBy, 
-            limit, 
-            getDocs 
-        } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
-            authDomain: "knb-clicker-game.firebaseapp.com",
-            projectId: "knb-clicker-game",
-            storageBucket: "knb-clicker-game.firebasestorage.app",
-            messagingSenderId: "810664187137",
-            appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let currentUser = null;
-        let isLoginMode = true;
-        let gameState = {
-            score: 0,
-            birdY: 300,
-            velocity: 0,
-            pipes: [],
-            isPlaying: false
-        };
-
-        // Elements
-        const elements = {
-            authContainer: document.getElementById('auth-container'),
-            gameMenu: document.getElementById('game-menu'),
-            gameContainer: document.getElementById('game-container'),
-            leaderboard: document.getElementById('leaderboard'),
-            bird: document.getElementById('bird'),
-            score: document.getElementById('score')
-        };
-
-        // Event Listeners
-        document.addEventListener('keydown', flap);
-        document.addEventListener('touchstart', handleTouch);
-
-        // Game Constants
-        const GRAVITY = 0.5;
-        const FLAP_FORCE = -8;
-        const PIPE_GAP = 150;
-        const PIPE_SPEED = 3;
-
-        async function handleAuth() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-
-            if(!username || !password) {
-                alert('Please fill all fields');
-                return;
-            }
-
-            const email = `${username}@game.com`;
-            
-            try {
-                if(isLoginMode) {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } else {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, 'users', userCredential.user.uid, {
-                        username,
-                        highScore: 0
-                    });
-                }
-            } catch (error) {
-                alert(error.message.replace('Firebase: ', ''));
-            }
-        }
-
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            document.querySelector('#auth-container button').textContent = 
-                isLoginMode ? 'Login' : 'Register';
-            document.querySelector('#auth-container button:last-child').textContent = 
-                isLoginMode ? 'Switch to Register' : 'Switch to Login';
-        }
-
-        async function startGame() {
-            elements.gameMenu.style.display = 'none';
-            elements.gameContainer.style.display = 'block';
-            gameState.isPlaying = true;
-            gameLoop();
-        }
-
-        function gameLoop() {
-            if(!gameState.isPlaying) return;
-
-            // Update game state
-            gameState.velocity += GRAVITY;
-            gameState.birdY += gameState.velocity;
-            elements.bird.style.top = `${gameState.birdY}px`;
-
-            // Check collisions
-            if(checkCollision() || gameState.birdY < 0 || gameState.birdY > 560) {
-                endGame();
-                return;
-            }
-
-            // Update pipes
-            updatePipes();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function updatePipes() {
-            // Pipe generation and movement logic
-        }
-
-        function checkCollision() {
-            // Collision detection logic
-        }
-
-        async function endGame() {
-            gameState.isPlaying = false;
-            if(gameState.score > currentUser.highScore) {
-                await updateDoc(doc(db, 'users', currentUser.uid), {
-                    highScore: gameState.score
-                });
-            }
-            showGameMenu();
-        }
-
-        function flap() {
-            if(gameState.isPlaying) {
-                gameState.velocity = FLAP_FORCE;
-            }
-        }
-
-        function handleTouch(e) {
-            e.preventDefault();
-            flap();
-        }
-
-        async function showLeaderboard() {
-            const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
-            const snapshot = await getDocs(q);
-            elements.leaderboard.innerHTML = snapshot.docs
-                .map(doc => `<li>${doc.data().username}: ${doc.data().highScore}</li>`)
-                .join('');
-            elements.leaderboard.style.display = 'block';
-        }
-
-        function hideLeaderboard() {
-            elements.leaderboard.style.display = 'none';
-        }
-
-        function showGameMenu() {
-            elements.gameContainer.style.display = 'none';
-            elements.gameMenu.style.display = 'block';
-        }
-
-        async function logout() {
-            await signOut(auth);
-            location.reload();
-        }
-
-        // Auth state listener
-        onAuthStateChanged(auth, (user) => {
-            if(user) {
-                currentUser = user;
-                elements.authContainer.style.display = 'none';
-                elements.gameMenu.style.display = 'block';
-            } else {
-                elements.authContainer.style.display = 'block';
-                elements.gameMenu.style.display = 'none';
-            }
-        });
-    </script>
+    <script src="firebase.js" type="module"></script>
+    <script src="game.js"></script>
 </body>
 </html>
