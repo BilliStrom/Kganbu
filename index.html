@@ -63,6 +63,69 @@
   appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
   };
 
+window.register = async () => {
+    try {
+        const username = document.getElementById('register-username').value.trim();
+        const password = document.getElementById('register-password').value.trim();
+
+        // Валидация
+        if (!validateUsername(username)) {
+            alert('Имя пользователя должно содержать 3-15 символов (только буквы и цифры)');
+            return;
+        }
+
+        if (password.length < 6) {
+            alert('Пароль должен содержать минимум 6 символов');
+            return;
+        }
+
+        const email = `${username}@knbgame.com`;
+        
+        // Регистрация
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Сохранение в Firestore
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+            username: username.toLowerCase(),
+            highScore: 0,
+            created: new Date().toISOString()
+        });
+
+        alert('Регистрация успешна!');
+        showLoginForm();
+    } catch (error) {
+        handleAuthError(error);
+    }
+};
+
+function handleAuthError(error) {
+    const message = error.message
+        .replace('Firebase: ', '')
+        .replace(/\(auth.*?\)/, '')
+        .trim();
+    
+    alert(message || 'Произошла неизвестная ошибка');
+}
+
+window.login = async () => {
+    try {
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+
+        if (!username || !password) {
+            alert('Заполните все поля');
+            return;
+        }
+
+        const email = `${username}@knbgame.com`;
+        await signInWithEmailAndPassword(auth, email, password);
+        
+        // Перенаправление происходит автоматически через onAuthStateChanged
+    } catch (error) {
+        handleAuthError(error);
+    }
+};
+
         // Импорт Firebase модулей
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
         import { 
@@ -85,8 +148,8 @@
             getDocs 
         } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-        // Инициализация Firebase
-        const app = initializeApp(firebaseConfig);
+        // Инициализация Firebase 
+const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
