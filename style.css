@@ -9,6 +9,12 @@ body {
     height: 100vh;
 }
 
+.pipe {
+    position: absolute;
+    width: 60px;
+    background: #2ecc71;
+    transition: left 0.05s linear;
+}
 #game-container {
     text-align: center;
 }
