@@ -2,121 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>KNB Flappy Bird</title>
     <style>
-        body { 
-            font-family: 'Arial Rounded MT Bold', Arial, sans-serif; 
-            margin: 0; 
-            background: #2c3e50; 
-            touch-action: manipulation; 
+        body {
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            margin: 0;
+            background: #2c3e50;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
-        #game { 
-            position: relative; 
-            width: 100%; 
-            max-width: 400px; 
-            margin: 0 auto; 
-            height: 100vh; 
+
+        #game {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            height: 100vh;
         }
-        #game-content { 
-            position: relative; 
-            width: 100%; 
-            height: 600px; 
-            background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%); 
-            overflow: hidden; 
+
+        #game-content {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%);
+            overflow: hidden;
+            touch-action: none;
         }
-        #bird { 
-            position: absolute; 
-            width: 40px; 
-            height: 40px; 
-            left: 50px; 
-            top: 50%; 
-            transform: translateY(-50%); 
+
+        #bird {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><text x="50%" y="55%" font-size="40" text-anchor="middle" fill="%23000">KNB</text></svg>') no-repeat;
-            background-size: contain; 
-            transition: transform 0.1s; 
-            z-index: 2; 
+            background-size: contain;
+            transition: transform 0.1s;
+            z-index: 2;
+            will-change: transform;
         }
-        .pipe { 
-            position: absolute; 
-            width: 60px; 
-            background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%); 
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2); 
+
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
         }
-        #score { 
-            position: absolute; 
-            top: 20px; 
-            left: 20px; 
-            font-size: 32px; 
-            color: white; 
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); 
-            z-index: 2; 
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 2;
         }
-        #pause-button { 
-            position: absolute; 
-            top: 20px; 
-            right: 20px; 
-            padding: 10px 20px; 
-            border: none; 
-            border-radius: 20px; 
-            background: rgba(255, 255, 255, 0.3); 
-            color: white; 
-            cursor: pointer; 
-            z-index: 3; 
+
+        #pause-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            z-index: 3;
+            font-size: 24px;
+            touch-action: manipulation;
         }
-        .auth-box { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            margin: 20px; 
-            box-shadow: 0 0 10px rgba(0,0,0,0.2); 
+
+        .auth-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 10;
         }
-        input { 
-            display: block; 
-            width: 100%; 
-            padding: 10px; 
-            margin: 10px 0; 
-            border: 1px solid #ddd; 
-            border-radius: 5px; 
+
+        input {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            -webkit-appearance: none;
         }
-        .game-button { 
-            padding: 12px 25px; 
-            border: none; 
-            border-radius: 25px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            margin: 5px; 
-            width: 100%; 
+
+        .game-button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            width: 100%;
+            touch-action: manipulation;
         }
-        #pause-menu { 
-            display: none; 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: rgba(0, 0, 0, 0.8); 
-            padding: 25px; 
-            border-radius: 15px; 
-            width: 80%; 
-            max-width: 300px; 
-            color: white; 
-            text-align: center; 
-            z-index: 4; 
+
+        #pause-menu {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 300px;
+            color: white;
+            text-align: center;
+            z-index: 100;
         }
-        #leaderboard { 
-            display: none; 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: rgba(255, 255, 255, 0.95); 
-            padding: 25px; 
-            border-radius: 15px; 
-            width: 80%; 
-            max-width: 300px; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.3); 
-            z-index: 5; 
+
+        #leaderboard {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 300px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            z-index: 100;
         }
     </style>
 </head>
@@ -208,9 +229,20 @@
             pauseMenu: document.getElementById('pause-menu')
         };
 
+        // Мобильная оптимизация
+        document.addEventListener('touchstart', function(e) {
+            if(e.target.tagName !== 'INPUT') e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            if(navigator.vibrate) navigator.vibrate(50);
+        });
+
         // Валидация имени пользователя
         const validateUsername = (username) => /^[A-Za-z0-9]{3,15}$/.test(username);
 
+        // Формы
         window.showRegisterForm = () => {
             elements.loginForm.innerHTML = `
                 <div class="auth-box">
@@ -233,6 +265,7 @@
             `;
         };
 
+        // Авторизация
         window.login = async () => {
             const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value.trim();
@@ -286,15 +319,7 @@
             }
         };
 
-        async function loadUserData() {
-            const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
-            if (docSnap.exists()) {
-                highScore = docSnap.data().highScore;
-                elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
-            }
-            updateLeaderboard();
-        }
-
+        // Игровая логика
         function startGame() {
             if(isPaused) return;
             resetGame();
@@ -410,25 +435,14 @@
                 `).join('');
         }
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loadUserData();
-                elements.loginForm.style.display = 'none';
-                elements.gameContent.style.display = 'block';
-                startGame();
-            } else {
-                elements.loginForm.style.display = 'block';
-                elements.gameContent.style.display = 'none';
-            }
-        });
-
         // Обработчики событий
         elements.pauseButton.addEventListener('click', togglePause);
+        elements.pauseButton.addEventListener('touchend', togglePause);
         document.addEventListener('keydown', handleFlap);
-        document.addEventListener('touchstart', handleFlap, { passive: false });
+        document.addEventListener('touchend', handleFlap);
 
-        function togglePause() {
+        function togglePause(e) {
+            if(e) e.preventDefault();
             isPaused = !isPaused;
             elements.pauseMenu.style.display = isPaused ? 'block' : 'none';
             if(isPaused) {
@@ -440,12 +454,15 @@
         }
 
         function handleFlap(e) {
-            if (e.type === 'touchstart') e.preventDefault();
-            if (isGameActive) birdPosition -= 35;
+            if(e) e.preventDefault();
+            if (isGameActive) {
+                birdPosition -= 35;
+                elements.bird.style.top = `${birdPosition}px`;
+            }
         }
 
         function animateBird() {
-            elements.bird.style.transform = `translateY(-50%) rotate(${Date.now() % 200 < 100 ? -20 : 10}deg)`;
+            elements.bird.style.transform = `rotate(${birdPosition * 0.2}deg)`;
             if(isGameActive) requestAnimationFrame(animateBird);
         }
 
@@ -462,6 +479,29 @@
         window.closeLeaderboard = () => {
             elements.leaderboard.style.display = 'none';
         };
+
+        // Инициализация
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadUserData();
+                elements.loginForm.style.display = 'none';
+                elements.gameContent.style.display = 'block';
+                startGame();
+            } else {
+                elements.loginForm.style.display = 'block';
+                elements.gameContent.style.display = 'none';
+            }
+        });
+
+        async function loadUserData() {
+            const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
+            if (docSnap.exists()) {
+                highScore = docSnap.data().highScore;
+                elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
+            }
+            updateLeaderboard();
+        }
     </script>
 </body>
 </html>
