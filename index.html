@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KNB Flappy Bird</title>
     <style>
+       #login-form {
+            position: relative;
+            z-index: 10;
+        }
         body { 
             font-family: 'Arial Rounded MT Bold', Arial, sans-serif; 
             margin: 0; 
@@ -424,7 +428,63 @@
         });
 
         // Обработчики событий
-        elements.pauseButton.addEventListener('click', togglePause);
+        
+  // Перехват всех touch-событий
+        document.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Обновленный обработчик паузы
+        elements.pauseButton.addEventListener('touchstart', function(e) {
+            e.stopPropagation();
+            togglePause();
+        });
+
+        // Обновленная система ввода
+        function initMobileInputs() {
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                    this.focus();
+                });
+            });
+        }
+
+        // Модифицированная функция handleFlap
+        function handleFlap(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (isGameActive) {
+                birdPosition -= 35;
+                elements.bird.style.top = `${birdPosition}px`;
+            }
+        }
+
+        // Инициализация при загрузке
+        window.addEventListener('DOMContentLoaded', () => {
+            initMobileInputs();
+        });
+
+        // Обновленный код регистрации/логина
+        window.login = async () => {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            // Добавляем вибрацию для обратной связи
+            if(navigator.vibrate) navigator.vibrate(50);
+
+            // Остальной код логина без изменений
+        
+
+        window.register = async () => {
+            // Аналогично добавляем вибрацию
+            if(navigator.vibrate) navigator.vibrate(50);
+            // Остальной код регистрации
+        
+
+elements.pauseButton.addEventListener('click', togglePause);
         document.addEventListener('keydown', handleFlap);
         document.addEventListener('touchstart', handleFlap, { passive: false });
 
