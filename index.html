@@ -5,24 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KNB Flappy Bird</title>
     <style>
-        /* Стили остаются теми же */
-        body { font-family: 'Arial Rounded MT Bold', Arial, sans-serif; margin: 0; background: #2c3e50; touch-action: manipulation; }
-        #game { position: relative; width: 100%; max-width: 400px; margin: 0 auto; height: 100vh; }
-        #game-content { position: relative; width: 100%; height: 600px; background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%); overflow: hidden; }
-        #bird { position: absolute; width: 40px; height: 40px; left: 50px; top: 50%; transform: translateY(-50%); background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><text x="50%" y="55%" font-size="40" text-anchor="middle" fill="%23000">KNB</text></svg>') no-repeat; background-size: contain; transition: transform 0.1s; z-index: 2; }
-        .pipe { position: absolute; width: 60px; background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%); box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
-        #score { position: absolute; top: 20px; left: 20px; font-size: 32px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 2; }
-        #pause-button { position: absolute; top: 20px; right: 20px; padding: 10px 20px; border: none; border-radius: 20px; background: rgba(255, 255, 255, 0.3); color: white; cursor: pointer; z-index: 3; }
-        .auth-box { background: white; padding: 20px; border-radius: 10px; margin: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-        input { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
-        .game-button { padding: 12px 25px; border: none; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s; margin: 5px; width: 100%; }
-        #pause-menu { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.8); padding: 25px; border-radius: 15px; width: 80%; max-width: 300px; color: white; text-align: center; z-index: 4; }
-        #leaderboard { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 15px; width: 80%; max-width: 300px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 5; }
+        body { 
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif; 
+            margin: 0; 
+            background: #2c3e50; 
+            touch-action: manipulation; 
+        }
+        #game { 
+            position: relative; 
+            width: 100%; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            height: 100vh; 
+        }
+        #game-content { 
+            position: relative; 
+            width: 100%; 
+            height: 600px; 
+            background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%); 
+            overflow: hidden; 
+        }
+        #bird { 
+            position: absolute; 
+            width: 40px; 
+            height: 40px; 
+            left: 50px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><text x="50%" y="55%" font-size="40" text-anchor="middle" fill="%23000">KNB</text></svg>') no-repeat;
+            background-size: contain; 
+            transition: transform 0.1s; 
+            z-index: 2; 
+        }
+        .pipe { 
+            position: absolute; 
+            width: 60px; 
+            background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%); 
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2); 
+        }
+        #score { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            font-size: 32px; 
+            color: white; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); 
+            z-index: 2; 
+        }
+        #pause-button { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 20px; 
+            background: rgba(255, 255, 255, 0.3); 
+            color: white; 
+            cursor: pointer; 
+            z-index: 3; 
+        }
+        .auth-box { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.2); 
+        }
+        input { 
+            display: block; 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+        .game-button { 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            margin: 5px; 
+            width: 100%; 
+        }
+        #pause-menu { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: rgba(0, 0, 0, 0.8); 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 80%; 
+            max-width: 300px; 
+            color: white; 
+            text-align: center; 
+            z-index: 4; 
+        }
+        #leaderboard { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 80%; 
+            max-width: 300px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.3); 
+            z-index: 5; 
+        }
     </style>
 </head>
 <body>
     <div id="game">
-        <!-- Формы и интерфейс остаются теми же -->
         <div id="login-form">
             <div class="auth-box">
                 <input type="text" id="login-username" placeholder="Username">
@@ -53,80 +152,6 @@
     </div>
 
     <script type="module">
-        // 🔽 ЗАМЕНИТЕ ЭТО НА ВАШУ FIREBASE КОНФИГУРАЦИЮ
-      const firebaseConfig = {
-      apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
-  authDomain: "knb-clicker-game.firebaseapp.com",
-  projectId: "knb-clicker-game",
-  storageBucket: "knb-clicker-game.firebasestorage.app",
-  messagingSenderId: "810664187137",
-  appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
-  };
-
-window.register = async () => {
-    try {
-        const username = document.getElementById('register-username').value.trim();
-        const password = document.getElementById('register-password').value.trim();
-
-        // Валидация
-        if (!validateUsername(username)) {
-            alert('Имя пользователя должно содержать 3-15 символов (только буквы и цифры)');
-            return;
-        }
-
-        if (password.length < 6) {
-            alert('Пароль должен содержать минимум 6 символов');
-            return;
-        }
-
-        const email = `${username}@knbgame.com`;
-        
-        // Регистрация
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // Сохранение в Firestore
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
-            username: username.toLowerCase(),
-            highScore: 0,
-            created: new Date().toISOString()
-        });
-
-        alert('Регистрация успешна!');
-        showLoginForm();
-    } catch (error) {
-        handleAuthError(error);
-    }
-};
-
-function handleAuthError(error) {
-    const message = error.message
-        .replace('Firebase: ', '')
-        .replace(/\(auth.*?\)/, '')
-        .trim();
-    
-    alert(message || 'Произошла неизвестная ошибка');
-}
-
-window.login = async () => {
-    try {
-        const username = document.getElementById('login-username').value.trim();
-        const password = document.getElementById('login-password').value.trim();
-
-        if (!username || !password) {
-            alert('Заполните все поля');
-            return;
-        }
-
-        const email = `${username}@knbgame.com`;
-        await signInWithEmailAndPassword(auth, email, password);
-        
-        // Перенаправление происходит автоматически через onAuthStateChanged
-    } catch (error) {
-        handleAuthError(error);
-    }
-};
-
-        // Импорт Firebase модулей
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
         import { 
             getAuth, 
@@ -148,12 +173,19 @@ window.login = async () => {
             getDocs 
         } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-        // Инициализация Firebase 
-const app = initializeApp(firebaseConfig);
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
+            authDomain: "knb-clicker-game.firebaseapp.com",
+            projectId: "knb-clicker-game",
+            storageBucket: "knb-clicker-game.firebasestorage.app",
+            messagingSenderId: "810664187137",
+            appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
+        };
+
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Игровые переменные
         let currentUser = null;
         let score = 0;
         let highScore = 0;
@@ -164,9 +196,7 @@ const app = initializeApp(firebaseConfig);
         let isGameActive = false;
         let isPaused = false;
         let pipes = [];
-        let gameSpeed = 3;
 
-        // Элементы DOM
         const elements = {
             loginForm: document.getElementById('login-form'),
             gameContent: document.getElementById('game-content'),
@@ -178,15 +208,9 @@ const app = initializeApp(firebaseConfig);
             pauseMenu: document.getElementById('pause-menu')
         };
 
-        // Обработчики событий
-        elements.pauseButton.addEventListener('click', togglePause);
-        document.addEventListener('keydown', handleFlap);
-        document.addEventListener('touchstart', handleFlap, { passive: false });
-
         // Валидация имени пользователя
         const validateUsername = (username) => /^[A-Za-z0-9]{3,15}$/.test(username);
 
-        // Система регистрации/логина
         window.showRegisterForm = () => {
             elements.loginForm.innerHTML = `
                 <div class="auth-box">
@@ -210,17 +234,16 @@ const app = initializeApp(firebaseConfig);
         };
 
         window.login = async () => {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
             if (!validateUsername(username)) {
                 alert('Invalid username! Use 3-15 alphanumeric characters.');
                 return;
             }
 
-            const email = `${username}@knbgame.com`;
-
             try {
+                const email = `${username}@knbgame.com`;
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 currentUser = userCredential.user;
                 await loadUserData();
@@ -233,9 +256,9 @@ const app = initializeApp(firebaseConfig);
         };
 
         window.register = async () => {
-            const username = document.getElementById('register-username').value;
-            const password = document.getElementById('register-password').value;
-            
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+
             if (!validateUsername(username)) {
                 alert('Invalid username! Use 3-15 alphanumeric characters.');
                 return;
@@ -246,15 +269,16 @@ const app = initializeApp(firebaseConfig);
                 return;
             }
 
-            const email = `${username}@knbgame.com`;
-
             try {
+                const email = `${username}@knbgame.com`;
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                
                 await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    username,
+                    username: username.toLowerCase(),
                     highScore: 0,
                     created: new Date().toISOString()
                 });
+
                 alert('Registration successful! Please login.');
                 showLoginForm();
             } catch (error) {
@@ -262,31 +286,72 @@ const app = initializeApp(firebaseConfig);
             }
         };
 
-        // Игровая логика
+        async function loadUserData() {
+            const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
+            if (docSnap.exists()) {
+                highScore = docSnap.data().highScore;
+                elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
+            }
+            updateLeaderboard();
+        }
+
         function startGame() {
             if(isPaused) return;
             resetGame();
             isGameActive = true;
             animateBird();
 
-            gameInterval = setInterval(() => gameLoop(), 1000/60);
+            gameInterval = setInterval(gameLoop, 20);
             pipeInterval = setInterval(createPipe, 1500);
         }
 
         function gameLoop() {
             if (!isGameActive || isPaused) return;
             
-            // Гравитация
             birdPosition += gravity;
             elements.bird.style.top = `${birdPosition}px`;
 
-            // Коллизии
             if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
                 endGame();
             }
 
-            // Обновление труб
             updatePipes();
+        }
+
+        function createPipe() {
+            const gap = 150;
+            const minHeight = 80;
+            const maxHeight = 350;
+            const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+
+            const topPipe = document.createElement('div');
+            topPipe.className = 'pipe';
+            topPipe.style.height = `${topHeight}px`;
+            topPipe.style.top = '0';
+            topPipe.style.left = '100%';
+            topPipe.isTop = true;
+
+            const bottomPipe = document.createElement('div');
+            bottomPipe.className = 'pipe';
+            bottomPipe.style.height = `${600 - topHeight - gap}px`;
+            bottomPipe.style.bottom = '0';
+            bottomPipe.style.left = '100%';
+            bottomPipe.isTop = false;
+
+            elements.gameContent.append(topPipe, bottomPipe);
+            pipes.push({ x: 400, element: topPipe, height: topHeight, isTop: true }, 
+                      { x: 400, element: bottomPipe, height: 600 - topHeight - gap, isTop: false });
+        }
+
+        function updatePipes() {
+            pipes.forEach(pipe => {
+                pipe.x -= 3;
+                pipe.element.style.left = `${pipe.x}px`;
+
+                if (pipe.x + 60 === 50) score++;
+            });
+            pipes = pipes.filter(pipe => pipe.x > -60);
+            elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
         }
 
         function checkCollision() {
@@ -312,10 +377,39 @@ const app = initializeApp(firebaseConfig);
             });
         }
 
-        // Остальные функции (updatePipes, createPipe, endGame и т.д.)
-        // ... (полный код из предыдущего ответа с исправлениями)
+        async function endGame() {
+            isGameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(pipeInterval);
 
-        // Инициализация
+            if (score > highScore) {
+                highScore = score;
+                await updateDoc(doc(db, 'users', currentUser.uid), { highScore });
+                updateLeaderboard();
+            }
+
+            if(confirm(`Game Over! Score: ${score}\nPlay again?`)) startGame();
+        }
+
+        function resetGame() {
+            score = 0;
+            birdPosition = 200;
+            pipes = [];
+            elements.bird.style.top = '200px';
+            elements.gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+        }
+
+        async function updateLeaderboard() {
+            const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
+            const querySnapshot = await getDocs(q);
+            elements.leaderboardList.innerHTML = querySnapshot.docs
+                .map((doc, index) => `
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        ${index + 1}. ${doc.data().username} - ${doc.data().highScore}
+                    </li>
+                `).join('');
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -326,9 +420,48 @@ const app = initializeApp(firebaseConfig);
             } else {
                 elements.loginForm.style.display = 'block';
                 elements.gameContent.style.display = 'none';
-                stopGame();
             }
         });
+
+        // Обработчики событий
+        elements.pauseButton.addEventListener('click', togglePause);
+        document.addEventListener('keydown', handleFlap);
+        document.addEventListener('touchstart', handleFlap, { passive: false });
+
+        function togglePause() {
+            isPaused = !isPaused;
+            elements.pauseMenu.style.display = isPaused ? 'block' : 'none';
+            if(isPaused) {
+                clearInterval(gameInterval);
+                clearInterval(pipeInterval);
+            } else {
+                startGame();
+            }
+        }
+
+        function handleFlap(e) {
+            if (e.type === 'touchstart') e.preventDefault();
+            if (isGameActive) birdPosition -= 35;
+        }
+
+        function animateBird() {
+            elements.bird.style.transform = `translateY(-50%) rotate(${Date.now() % 200 < 100 ? -20 : 10}deg)`;
+            if(isGameActive) requestAnimationFrame(animateBird);
+        }
+
+        async function handleLogout() {
+            await signOut(auth);
+            location.reload();
+        }
+
+        window.showLeaderboard = () => {
+            elements.leaderboard.style.display = 'block';
+            elements.pauseMenu.style.display = 'none';
+        };
+
+        window.closeLeaderboard = () => {
+            elements.leaderboard.style.display = 'none';
+        };
     </script>
 </body>
 </html>
