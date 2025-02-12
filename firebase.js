@@ -19,14 +19,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-
+            apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
+            authDomain: "knb-clicker-game.firebaseapp.com",
+            projectId: "knb-clicker-game",
+            storageBucket: "knb-clicker-game.firebasestorage.app",
+            messagingSenderId: "810664187137",
+            appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
+        };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
