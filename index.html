@@ -186,175 +186,282 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Game state
         let currentUser = null;
         let score = 0;
         let highScore = 0;
-        let birdY = 50;
-        let velocity = 0;
-        let pipes = [];
-        let gameLoopId;
+        let gameInterval;
+        let pipeInterval;
+        let birdPosition = 200;
+        let gravity = 2.5;
+        let isGameActive = false;
         let isPaused = false;
+        let pipes = [];
 
-        // Elements
         const elements = {
             loginForm: document.getElementById('login-form'),
             gameContent: document.getElementById('game-content'),
+            scoreDisplay: document.getElementById('score'),
+            leaderboard: document.getElementById('leaderboard'),
+            leaderboardList: document.getElementById('leaderboard-list'),
             bird: document.getElementById('bird'),
-            score: document.getElementById('score'),
-            pauseButton: document.getElementById('pause-button')
+            pauseButton: document.getElementById('pause-button'),
+            pauseMenu: document.getElementById('pause-menu')
         };
 
-        // Touch handling
-        let touchStartY = 0;
-        const handleTouch = (e) => {
-            e.preventDefault();
-            if(e.type === 'touchstart') {
-                touchStartY = e.touches[0].clientY;
-            } else if(e.type === 'touchmove') {
-                const deltaY = touchStartY - e.touches[0].clientY;
-                if(deltaY > 10) jump();
-            }
-        };
+        // Валидация имени пользователя
+        const validateUsername = (username) => /^[A-Za-z0-9]{3,15}$/.test(username);
 
-        const jump = () => {
-            if(!isPaused) velocity = -12;
-        };
-
-        // Game logic
-        const updateGame = () => {
-            if(isPaused) return;
-
-            // Update bird position
-            velocity += 0.8;
-            birdY += velocity;
-            elements.bird.style.top = `${Math.max(0, Math.min(92, birdY))}%`;
-
-            // Update pipes
-            pipes.forEach(pipe => {
-                pipe.x -= 2;
-                pipe.element.style.left = `${pipe.x}%`;
-
-                // Collision detection
-                if(checkCollision(pipe)) endGame();
-            });
-
-            // Score update
-            elements.score.textContent = score;
-        };
-
-        // Event listeners
-        document.addEventListener('touchstart', handleTouch);
-        document.addEventListener('touchmove', handleTouch);
-        document.addEventListener('click', jump);
-        elements.pauseButton.addEventListener('click', togglePause);
-
-        // Auth functions
         window.showRegisterForm = () => {
             elements.loginForm.innerHTML = `
-                <input type="text" id="register-username" placeholder="Username">
-                <input type="password" id="register-password" placeholder="Password">
-                <button class="game-button" onclick="register()">Register</button>
-                <button class="game-button" onclick="showLoginForm()">Back to Login</button>
+                <div class="auth-box">
+                    <input type="text" id="register-username" placeholder="Username (3-15 chars)">
+                    <input type="password" id="register-password" placeholder="Password (6+ chars)">
+                    <button class="game-button" style="background: #3498db;" onclick="register()">Register</button>
+                    <button class="game-button" style="background: #95a5a6;" onclick="showLoginForm()">Back to Login</button>
+                </div>
+            `;
+        };
+
+        window.showLoginForm = () => {
+            elements.loginForm.innerHTML = `
+                <div class="auth-box">
+                    <input type="text" id="login-username" placeholder="Username">
+                    <input type="password" id="login-password" placeholder="Password">
+                    <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
+                    <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
+                </div>
             `;
         };
 
         window.login = async () => {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            if (!validateUsername(username)) {
+                alert('Invalid username! Use 3-15 alphanumeric characters.');
+                return;
+            }
+
             try {
-                const userCredential = await signInWithEmailAndPassword(
-                    auth, 
-                    `${username}@knbgame.com`, 
-                    password
-                );
+                const email = `${username}@knbgame.com`;
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                currentUser = userCredential.user;
+                await loadUserData();
+                elements.loginForm.style.display = 'none';
+                elements.gameContent.style.display = 'block';
                 startGame();
-            } catch(error) {
-                alert(error.message);
+            } catch (error) {
+                alert(error.message.replace('Firebase: ', ''));
             }
         };
 
         window.register = async () => {
-            const username = document.getElementById('register-username').value;
-            const password = document.getElementById('register-password').value;
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+
+            if (!validateUsername(username)) {
+                alert('Invalid username! Use 3-15 alphanumeric characters.');
+                return;
+            }
             
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+
             try {
-                const userCredential = await createUserWithEmailAndPassword(
-                    auth, 
-                    `${username}@knbgame.com`, 
-                    password
-                );
+                const email = `${username}@knbgame.com`;
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 
                 await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    username,
-                    highScore: 0
+                    username: username.toLowerCase(),
+                    highScore: 0,
+                    created: new Date().toISOString()
                 });
-                
-                startGame();
-            } catch(error) {
-                alert(error.message);
+
+                alert('Registration successful! Please login.');
+                showLoginForm();
+            } catch (error) {
+                alert(error.message.replace('Firebase: ', ''));
             }
         };
 
-        // Game functions
-        function startGame() {
-            elements.loginForm.style.display = 'none';
-            elements.gameContent.style.display = 'block';
-            gameLoopId = setInterval(updateGame, 1000/60);
-            setInterval(createPipe, 1500);
+        async function loadUserData() {
+            const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
+            if (docSnap.exists()) {
+                highScore = docSnap.data().highScore;
+                elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
+            }
+            updateLeaderboard();
         }
 
-        function togglePause() {
-            isPaused = !isPaused;
-            elements.pauseButton.textContent = isPaused ? "▶" : "⏸";
+        function startGame() {
+            if(isPaused) return;
+            resetGame();
+            isGameActive = true;
+            animateBird();
+
+            gameInterval = setInterval(gameLoop, 20);
+            pipeInterval = setInterval(createPipe, 1500);
+        }
+
+        function gameLoop() {
+            if (!isGameActive || isPaused) return;
+            
+            birdPosition += gravity;
+            elements.bird.style.top = `${birdPosition}px`;
+
+            if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
+                endGame();
+            }
+
+            updatePipes();
         }
 
         function createPipe() {
-            const gap = 25;
-            const pipeHeight = Math.random() * 50 + 15;
-            
+            const gap = 150;
+            const minHeight = 80;
+            const maxHeight = 350;
+            const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+
             const topPipe = document.createElement('div');
             topPipe.className = 'pipe';
-            topPipe.style.height = `${pipeHeight}%`;
+            topPipe.style.height = `${topHeight}px`;
             topPipe.style.top = '0';
             topPipe.style.left = '100%';
-            
+            topPipe.isTop = true;
+
             const bottomPipe = document.createElement('div');
             bottomPipe.className = 'pipe';
-            bottomPipe.style.height = `${100 - pipeHeight - gap}%`;
+            bottomPipe.style.height = `${600 - topHeight - gap}px`;
             bottomPipe.style.bottom = '0';
             bottomPipe.style.left = '100%';
+            bottomPipe.isTop = false;
 
             elements.gameContent.append(topPipe, bottomPipe);
-            pipes.push({ element: topPipe, x: 100 }, { element: bottomPipe, x: 100 });
+            pipes.push({ x: 400, element: topPipe, height: topHeight, isTop: true }, 
+                      { x: 400, element: bottomPipe, height: 600 - topHeight - gap, isTop: false });
         }
 
-        function checkCollision(pipe) {
-            const birdRect = elements.bird.getBoundingClientRect();
-            const pipeRect = pipe.element.getBoundingClientRect();
-            
-            return !(birdRect.right < pipeRect.left || 
-                   birdRect.left > pipeRect.right || 
-                   birdRect.bottom < pipeRect.top || 
-                   birdRect.top > pipeRect.bottom);
+        function updatePipes() {
+            pipes.forEach(pipe => {
+                pipe.x -= 3;
+                pipe.element.style.left = `${pipe.x}px`;
+
+                if (pipe.x + 60 === 50) score++;
+            });
+            pipes = pipes.filter(pipe => pipe.x > -60);
+            elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
         }
 
-        function endGame() {
-            clearInterval(gameLoopId);
-            alert(`Game Over! Score: ${score}`);
+        function checkCollision() {
+            const birdRect = {
+                x: 50,
+                y: birdPosition,
+                width: 40,
+                height: 40
+            };
+
+            return pipes.some(pipe => {
+                const pipeRect = {
+                    x: pipe.x,
+                    y: pipe.isTop ? 0 : 600 - pipe.height,
+                    width: 60,
+                    height: pipe.height
+                };
+
+                return !(birdRect.x + birdRect.width < pipeRect.x ||
+                        birdRect.x > pipeRect.x + pipeRect.width ||
+                        birdRect.y + birdRect.height < pipeRect.y ||
+                        birdRect.y > pipeRect.y + pipeRect.height);
+            });
+        }
+
+        async function endGame() {
+            isGameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(pipeInterval);
+
+            if (score > highScore) {
+                highScore = score;
+                await updateDoc(doc(db, 'users', currentUser.uid), { highScore });
+                updateLeaderboard();
+            }
+
+            if(confirm(`Game Over! Score: ${score}\nPlay again?`)) startGame();
+        }
+
+        function resetGame() {
+            score = 0;
+            birdPosition = 200;
+            pipes = [];
+            elements.bird.style.top = '200px';
+            elements.gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+        }
+
+        async function updateLeaderboard() {
+            const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
+            const querySnapshot = await getDocs(q);
+            elements.leaderboardList.innerHTML = querySnapshot.docs
+                .map((doc, index) => `
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        ${index + 1}. ${doc.data().username} - ${doc.data().highScore}
+                    </li>
+                `).join('');
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadUserData();
+                elements.loginForm.style.display = 'none';
+                elements.gameContent.style.display = 'block';
+                startGame();
+            } else {
+                elements.loginForm.style.display = 'block';
+                elements.gameContent.style.display = 'none';
+            }
+        });
+
+        // Обработчики событий
+        elements.pauseButton.addEventListener('click', togglePause);
+        document.addEventListener('keydown', handleFlap);
+        document.addEventListener('touchstart', handleFlap, { passive: false });
+
+        function togglePause() {
+            isPaused = !isPaused;
+            elements.pauseMenu.style.display = isPaused ? 'block' : 'none';
+            if(isPaused) {
+                clearInterval(gameInterval);
+                clearInterval(pipeInterval);
+            } else {
+                startGame();
+            }
+        }
+
+        function handleFlap(e) {
+            if (e.type === 'touchstart') e.preventDefault();
+            if (isGameActive) birdPosition -= 35;
+        }
+
+        function animateBird() {
+            elements.bird.style.transform = `translateY(-50%) rotate(${Date.now() % 200 < 100 ? -20 : 10}deg)`;
+            if(isGameActive) requestAnimationFrame(animateBird);
+        }
+
+        async function handleLogout() {
+            await signOut(auth);
             location.reload();
         }
 
-        // Init
-        onAuthStateChanged(auth, user => {
-            if(user) {
-                currentUser = user;
-                getDoc(doc(db, 'users', user.uid)).then(snap => {
-                    highScore = snap.data().highScore;
-                });
-            }
-        });
+        window.showLeaderboard = () => {
+            elements.leaderboard.style.display = 'block';
+            elements.pauseMenu.style.display = 'none';
+        };
+
+        window.closeLeaderboard = () => {
+            elements.leaderboard.style.display = 'none';
+        };
     </script>
 </body>
 </html>
