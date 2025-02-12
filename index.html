@@ -2,45 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KNB Flappy Bird</title>
     <style>
-        /* Обновленные стили для мобильных устройств */
         body { 
             font-family: 'Arial Rounded MT Bold', Arial, sans-serif; 
             margin: 0; 
             background: #2c3e50; 
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+            touch-action: manipulation; 
         }
-
-        .auth-box input {
-            font-size: 16px; /* Увеличенный размер шрифта для мобильных */
-            padding: 12px;
+        #game { 
+            position: relative; 
+            width: 100%; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            height: 100vh; 
         }
-
-        .game-button {
-            padding: 15px 25px;
-            font-size: 18px;
+        #game-content { 
+            position: relative; 
+            width: 100%; 
+            height: 600px; 
+            background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%); 
+            overflow: hidden; 
         }
-
-        #pause-button {
-            padding: 15px;
-            font-size: 24px;
+        #bird { 
+            position: absolute; 
+            width: 40px; 
+            height: 40px; 
+            left: 50px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><text x="50%" y="55%" font-size="40" text-anchor="middle" fill="%23000">KNB</text></svg>') no-repeat;
+            background-size: contain; 
+            transition: transform 0.1s; 
+            z-index: 2; 
         }
-
-        /* Исправление z-index */
-        #login-form {
-            position: relative;
-            z-index: 10;
+        .pipe { 
+            position: absolute; 
+            width: 60px; 
+            background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%); 
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2); 
         }
-
-        #game-content {
-            touch-action: none;
+        #score { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            font-size: 32px; 
+            color: white; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); 
+            z-index: 2; 
+        }
+        #pause-button { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 20px; 
+            background: rgba(255, 255, 255, 0.3); 
+            color: white; 
+            cursor: pointer; 
+            z-index: 3; 
+        }
+        .auth-box { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.2); 
+        }
+        input { 
+            display: block; 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+        .game-button { 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            margin: 5px; 
+            width: 100%; 
+        }
+        #pause-menu { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: rgba(0, 0, 0, 0.8); 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 80%; 
+            max-width: 300px; 
+            color: white; 
+            text-align: center; 
+            z-index: 4; 
+        }
+        #leaderboard { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 80%; 
+            max-width: 300px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.3); 
+            z-index: 5; 
         }
     </style>
 </head>
-<body>   
+<body>
     <div id="game">
         <div id="login-form">
             <div class="auth-box">
@@ -71,7 +151,7 @@
         </div>
     </div>
 
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
         import { 
             getAuth, 
@@ -382,74 +462,6 @@
         window.closeLeaderboard = () => {
             elements.leaderboard.style.display = 'none';
         };
-  
-<!-- Остальная HTML структура без изменений -->
-
-    <script type="module">
-        // Добавленные исправления для мобильных устройств
-
-        // Перехват всех touch-событий
-        document.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-
-        // Обновленный обработчик паузы
-        elements.pauseButton.addEventListener('touchstart', function(e) {
-            e.stopPropagation();
-            togglePause();
-        });
-
-        // Обновленная система ввода
-        function initMobileInputs() {
-            document.querySelectorAll('input').forEach(input => {
-                input.addEventListener('touchstart', function(e) {
-                    e.stopPropagation();
-                    this.focus();
-                });
-            });
-        }
-
-        // Модифицированная функция handleFlap
-        function handleFlap(e) {
-            if (e.type === 'touchstart') {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            if (isGameActive) {
-                birdPosition -= 35;
-                elements.bird.style.top = `${birdPosition}px`;
-            }
-        }
-
-        // Инициализация при загрузке
-        window.addEventListener('DOMContentLoaded', () => {
-            initMobileInputs();
-        });
-
-        // Обновленный код регистрации/логина
-        window.login = async () => {
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-
-            // Добавляем вибрацию для обратной связи
-            if(navigator.vibrate) navigator.vibrate(50);
-
-            // Остальной код логина без изменений
-        };
-
-        window.register = async () => {
-            // Аналогично добавляем вибрацию
-            if(navigator.vibrate) navigator.vibrate(50);
-            // Остальной код регистрации
-        };
-
-        // Исправление анимации птицы
-        function animateBird() {
-            elements.bird.style.transform = `rotate(${birdPosition * 0.2}deg)`;
-            if(isGameActive) requestAnimationFrame(animateBird);
-        }
-
-        // Остальной код без изменений
     </script>
 </body>
 </html>
