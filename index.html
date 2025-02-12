@@ -348,7 +348,7 @@
                 birdPosition += gravity;
                 elements.bird.style.top = `${birdPosition}px`;
 
-                if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
+                if (birdPosition <= 0 || birdPosition >= 360 || checkCollision()) {
                     endGame();
                 }
 
