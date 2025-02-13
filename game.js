@@ -190,4 +190,16 @@ function handleFlap(e) {
     if (gameState.isPlaying) {
         gameState.velocity = FLAP_FORCE;
     }
+
+// Добавьте это в конец файла (перед закрывающей скобкой модуля):
+
+// Logout
+document.getElementById('logout-button').addEventListener('click', async () => {
+    try {
+        await signOut(auth);
+        alert('Вы успешно вышли!');
+        location.reload(); // Перезагрузка страницы
+    } catch (error) {
+        alert('Ошибка выхода: ' + error.message);
+    }
 }
