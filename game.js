@@ -1,4 +1,3 @@
-
 let gameState = {
     isPlaying: false,
     score: 0,
@@ -16,6 +15,8 @@ const PIPE_SPEED = 3;
 
 // Привязка событий
 document.getElementById('play-button').addEventListener('click', startGame);
+document.getElementById('leaderboard-button').addEventListener('click', showLeaderboard);
+document.getElementById('close-leaderboard').addEventListener('click', hideLeaderboard);
 document.addEventListener('keydown', handleFlap);
 document.addEventListener('touchstart', handleFlap);
 
@@ -83,8 +84,8 @@ function createPipe() {
     document.getElementById('game').appendChild(topPipe);
     document.getElementById('game').appendChild(bottomPipe);
 
-    gameState.pipes.push({ element: topPipe, x: 400, height: topHeight, isTop: true });
-    gameState.pipes.push({ element: bottomPipe, x: 400, height: 600 - topHeight - gap, isTop: false });
+    gameState.pipes.push({ element: topPipe, x: 400, height: topHeight, isTop: true, scored: false });
+    gameState.pipes.push({ element: bottomPipe, x: 400, height: 600 - topHeight - gap, isTop: false, scored: false });
 }
 
 function updatePipes() {
@@ -98,8 +99,9 @@ function updatePipes() {
             gameState.pipes = gameState.pipes.filter(p => p !== pipe);
         }
 
-        // Обновление счета
-        if (pipe.x + 60 === 50 && pipe.isTop) {
+        // Обновление счета при пролете трубы
+        if (pipe.x + 60 < 50 && pipe.isTop && !pipe.scored) {
+            pipe.scored = true;
             gameState.score++;
             document.getElementById('score').textContent = gameState.score;
         }
@@ -131,7 +133,7 @@ function checkCollision() {
     });
 }
 
-function endGame() {
+async function endGame() {
     gameState.isPlaying = false;
     clearInterval(gameState.gameLoopInterval);
     clearInterval(gameState.pipeInterval);
@@ -140,6 +142,19 @@ function endGame() {
     gameState.pipes.forEach(pipe => pipe.element.remove());
     gameState.pipes = [];
 
+    // Обновление рекорда в Firestore
+    if (currentUser) {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        const currentHighScore = userDoc.data().highScore || 0;
+
+        if (gameState.score > currentHighScore) {
+            await updateDoc(userRef, {
+                highScore: gameState.score
+            });
+        }
+    }
+
     alert(`Game Over! Your score: ${gameState.score}`);
     showGameMenu();
 }
@@ -147,6 +162,27 @@ function endGame() {
 function showGameMenu() {
     document.getElementById('game').style.display = 'none';
     document.getElementById('game-menu').style.display = 'block';
+}
+
+async function showLeaderboard() {
+    const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
+    const querySnapshot = await getDocs(q);
+
+    const leaderboardList = document.getElementById('leaderboard-list');
+    leaderboardList.innerHTML = '';
+
+    querySnapshot.forEach((doc, index) => {
+        const user = doc.data();
+        leaderboardList.innerHTML += `
+            <li>${index + 1}. ${user.username} - ${user.highScore}</li>
+        `;
+    });
+
+    document.getElementById('leaderboard').style.display = 'block';
+}
+
+function hideLeaderboard() {
+    document.getElementById('leaderboard').style.display = 'none';
 }
 
 function handleFlap(e) {
