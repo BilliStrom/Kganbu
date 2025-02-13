@@ -2,39 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KNB Flappy Bird</title>
+    <style>
+        /* Ваши стили остаются без изменений */
+        body { font-family: 'Arial Rounded MT Bold', Arial, sans-serif; margin: 0; background: #2c3e50; touch-action: manipulation; }
+        #game { position: relative; width: 100%; max-width: 400px; margin: 0 auto; height: 100vh; }
+        #game-content { position: relative; width: 100%; height: 600px; background: linear-gradient(to bottom, #4ec0ca 0%, #3aa3bf 100%); overflow: hidden; }
+        #bird { position: absolute; width: 40px; height: 40px; left: 50px; top: 50%; transform: translateY(-50%); background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><text x="50%" y="55%" font-size="40" text-anchor="middle" fill="%23000">KNB</text></svg>') no-repeat; background-size: contain; transition: transform 0.1s; z-index: 2; }
+        .pipe { position: absolute; width: 60px; background: linear-gradient(to right, #2ecc71 0%, #27ae60 100%); box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+        #score { position: absolute; top: 20px; left: 20px; font-size: 32px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 2; }
+        #pause-button { position: absolute; top: 20px; right: 20px; padding: 10px 20px; border: none; border-radius: 20px; background: rgba(255, 255, 255, 0.3); color: white; cursor: pointer; z-index: 3; }
+        .auth-box { background: white; padding: 20px; border-radius: 10px; margin: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+        input { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        .game-button { padding: 12px 25px; border: none; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s; margin: 5px; width: 100%; }
+        #pause-menu { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.8); padding: 25px; border-radius: 15px; width: 80%; max-width: 300px; color: white; text-align: center; z-index: 4; }
+        #leaderboard { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 15px; width: 80%; max-width: 300px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 5; }
+        
+        /* Мобильная оптимизация */
+        @media (max-width: 480px) {
+            .auth-box { margin: 10px; padding: 15px; }
+            input { font-size: 14px; padding: 8px; }
+            .game-button { padding: 10px 20px; font-size: 14px; }
+            #score { font-size: 24px; }
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container">
+    <div id="game">
         <div id="login-form">
-            <h2>Flappy Bird</h2>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button id="auth-button">Login</button>
-            <button id="switch-mode">Switch to Register</button>
+            <div class="auth-box">
+                <input type="text" id="login-username" placeholder="Username" autocapitalize="none">
+                <input type="password" id="login-password" placeholder="Password">
+                <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
+                <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
+            </div>
         </div>
-        
-        <div id="game-menu" style="display: none;">
-            <button id="play-button">Play</button>
-            <button id="leaderboard-button">Leaderboard</button>
-            <button id="logout-button">Logout</button>
-        </div>
-        
-        <div id="game" style="display: none;">
-            <div id="score">0</div>
+
+        <div id="game-content" style="display: none;">
+            <button id="pause-button">⏸</button>
             <div id="bird"></div>
+            <div id="score">0</div>
         </div>
-        
-        <div id="leaderboard" style="display: none;">
-            <h2>Leaderboard</h2>
-            <ul id="leaderboard-list"></ul>
-            <button id="close-leaderboard">Close</button>
+
+        <div id="pause-menu">
+            <h3>PAUSED</h3>
+            <button class="game-button" onclick="togglePause()" style="background: #2ecc71;">Resume</button>
+            <button class="game-button" onclick="showLeaderboard()" style="background: #3498db;">Leaderboard</button>
+            <button class="game-button" id="logout-button" style="background: #e74c3c;">Exit</button>
+        </div>
+
+        <div id="leaderboard">
+            <h3>🏆 Leaderboard</h3>
+            <ul id="leaderboard-list" style="list-style: none; padding: 0;"></ul>
+            <button class="game-button" onclick="closeLeaderboard()" style="background: #2ecc71;">Close</button>
         </div>
     </div>
-    <script src="firebase.js" type="module"></script>
-    <script src="game.js"></script>
-<script type="module" src="game.js"></script>
+
+    <script type="module" src="game.js"></script>
 </body>
 </html>
