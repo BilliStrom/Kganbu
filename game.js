@@ -20,94 +20,159 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
-            apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
-            authDomain: "knb-clicker-game.firebaseapp.com",
-            projectId: "knb-clicker-game",
-            storageBucket: "knb-clicker-game.firebasestorage.app",
-            messagingSenderId: "810664187137",
-            appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
-        };
+    apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
+    authDomain: "knb-clicker-game.firebaseapp.com",
+    projectId: "knb-clicker-game",
+    storageBucket: "knb-clicker-game.firebasestorage.app",
+    messagingSenderId: "810664187137",
+    appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
+let score = 0;
+let highScore = 0;
+let gameInterval;
+let pipeInterval;
+let birdPosition = 200;
+let gravity = 2.5;
+let isGameActive = false;
+let isPaused = false;
+let pipes = [];
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('game-menu').style.display = 'block';
-    } else {
-        currentUser = null;
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('game-menu').style.display = 'none';
-    }
-});
-
-let gameState = {
-    isPlaying: false,
-    score: 0,
-    birdY: 300,
-    velocity: 0,
-    pipes: [],
-    pipeInterval: null,
-    gameLoopInterval: null
+const elements = {
+    loginForm: document.getElementById('login-form'),
+    gameContent: document.getElementById('game-content'),
+    scoreDisplay: document.getElementById('score'),
+    leaderboard: document.getElementById('leaderboard'),
+    leaderboardList: document.getElementById('leaderboard-list'),
+    bird: document.getElementById('bird'),
+    pauseButton: document.getElementById('pause-button'),
+    pauseMenu: document.getElementById('pause-menu'),
+    logoutButton: document.getElementById('logout-button')
 };
 
-const GRAVITY = 0.5;
-const FLAP_FORCE = -8;
-const PIPE_GAP = 150;
-const PIPE_SPEED = 3;
+// Инициализация обработчиков
+const initEventListeners = () => {
+    elements.pauseButton.addEventListener('click', togglePause);
+    elements.logoutButton.addEventListener('click', handleLogout);
+    document.addEventListener('keydown', handleFlap);
+    document.addEventListener('touchstart', handleFlap, { passive: false });
+};
 
-// Привязка событий
-document.getElementById('play-button').addEventListener('click', startGame);
-document.getElementById('leaderboard-button').addEventListener('click', showLeaderboard);
-document.getElementById('close-leaderboard').addEventListener('click', hideLeaderboard);
-document.addEventListener('keydown', handleFlap);
-document.addEventListener('touchstart', handleFlap);
+const validateUsername = (username) => /^[A-Za-z0-9]{3,15}$/.test(username);
 
-function startGame() {
-    if (gameState.isPlaying) return;
-
-    // Сброс состояния игры
-    gameState.isPlaying = true;
-    gameState.score = 0;
-    gameState.birdY = 300;
-    gameState.velocity = 0;
-    gameState.pipes = [];
-
-    // Очистка экрана
-    document.getElementById('game').innerHTML = `
-        <div id="score">0</div>
-        <div id="bird"></div>
+window.showRegisterForm = () => {
+    elements.loginForm.innerHTML = `
+        <div class="auth-box">
+            <input type="text" id="register-username" placeholder="Username (3-15 chars)" autocapitalize="none">
+            <input type="password" id="register-password" placeholder="Password (6+ chars)">
+            <button class="game-button" style="background: #3498db;" onclick="register()">Register</button>
+            <button class="game-button" style="background: #95a5a6;" onclick="showLoginForm()">Back to Login</button>
+        </div>
     `;
+};
 
-    // Запуск игрового цикла
-    gameState.gameLoopInterval = setInterval(gameLoop, 20);
-    gameState.pipeInterval = setInterval(createPipe, 1500);
+window.showLoginForm = () => {
+    elements.loginForm.innerHTML = `
+        <div class="auth-box">
+            <input type="text" id="login-username" placeholder="Username" autocapitalize="none">
+            <input type="password" id="login-password" placeholder="Password">
+            <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
+            <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
+        </div>
+    `;
+};
 
-    // Скрыть меню и показать игру
-    document.getElementById('game-menu').style.display = 'none';
-    document.getElementById('game').style.display = 'block';
-}
+window.login = async () => {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value.trim();
 
-function gameLoop() {
-    if (!gameState.isPlaying) return;
-
-    // Обновление позиции птицы
-    gameState.velocity += GRAVITY;
-    gameState.birdY += gameState.velocity;
-    document.getElementById('bird').style.top = `${gameState.birdY}px`;
-
-    // Проверка столкновений
-    if (gameState.birdY < 0 || gameState.birdY > 560 || checkCollision()) {
-        endGame();
+    if (!validateUsername(username)) {
+        alert('Invalid username! Use 3-15 alphanumeric characters.');
         return;
     }
 
-    // Обновление труб
+    try {
+        const email = `${username}@knbgame.com`;
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        currentUser = userCredential.user;
+        await loadUserData();
+        elements.loginForm.style.display = 'none';
+        elements.gameContent.style.display = 'block';
+        startGame();
+    } catch (error) {
+        alert(error.message.replace('Firebase: ', ''));
+    }
+};
+
+window.register = async () => {
+    const username = document.getElementById('register-username').value.trim();
+    const password = document.getElementById('register-password').value.trim();
+
+    if (!validateUsername(username)) {
+        alert('Invalid username! Use 3-15 alphanumeric characters.');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters');
+        return;
+    }
+
+    try {
+        const email = `${username}@knbgame.com`;
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+            username: username.toLowerCase(),
+            highScore: 0,
+            created: new Date().toISOString()
+        });
+
+        alert('Registration successful! Please login.');
+        showLoginForm();
+    } catch (error) {
+        alert(error.message.replace('Firebase: ', ''));
+    }
+};
+
+async function loadUserData() {
+    try {
+        const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
+        if (docSnap.exists()) {
+            highScore = docSnap.data().highScore;
+            elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
+        }
+        updateLeaderboard();
+    } catch (error) {
+        alert('Error loading user data: ' + error.message);
+    }
+}
+
+function startGame() {
+    if(isPaused) return;
+    resetGame();
+    isGameActive = true;
+    animateBird();
+
+    gameInterval = setInterval(gameLoop, 20);
+    pipeInterval = setInterval(createPipe, 1500);
+}
+
+function gameLoop() {
+    if (!isGameActive || isPaused) return;
+    
+    birdPosition += gravity;
+    elements.bird.style.top = `${birdPosition}px`;
+
+    if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
+        endGame();
+    }
+
     updatePipes();
 }
 
@@ -129,42 +194,34 @@ function createPipe() {
     bottomPipe.style.bottom = '0';
     bottomPipe.style.left = '100%';
 
-    document.getElementById('game').appendChild(topPipe);
-    document.getElementById('game').appendChild(bottomPipe);
-
-    gameState.pipes.push({ element: topPipe, x: 400, height: topHeight, isTop: true, scored: false });
-    gameState.pipes.push({ element: bottomPipe, x: 400, height: 600 - topHeight - gap, isTop: false, scored: false });
+    elements.gameContent.append(topPipe, bottomPipe);
+    pipes.push({ x: 400, element: topPipe, height: topHeight, isTop: true, scored: false }, 
+               { x: 400, element: bottomPipe, height: 600 - topHeight - gap, isTop: false });
 }
 
 function updatePipes() {
-    gameState.pipes.forEach(pipe => {
-        pipe.x -= PIPE_SPEED;
+    pipes.forEach(pipe => {
+        pipe.x -= 3;
         pipe.element.style.left = `${pipe.x}px`;
 
-        // Удаление труб за пределами экрана
-        if (pipe.x + 60 < 0) {
-            pipe.element.remove();
-            gameState.pipes = gameState.pipes.filter(p => p !== pipe);
-        }
-
-        // Обновление счета при пролете трубы
-        if (pipe.x + 60 < 50 && pipe.isTop && !pipe.scored) {
+        if (pipe.x + 60 === 50 && pipe.isTop && !pipe.scored) {
             pipe.scored = true;
-            gameState.score++;
-            document.getElementById('score').textContent = gameState.score;
+            score++;
+            elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
         }
     });
+    pipes = pipes.filter(pipe => pipe.x > -60);
 }
 
 function checkCollision() {
     const birdRect = {
         x: 50,
-        y: gameState.birdY,
+        y: birdPosition,
         width: 40,
         height: 40
     };
 
-    return gameState.pipes.some(pipe => {
+    return pipes.some(pipe => {
         const pipeRect = {
             x: pipe.x,
             y: pipe.isTop ? 0 : 600 - pipe.height,
@@ -172,70 +229,109 @@ function checkCollision() {
             height: pipe.height
         };
 
-        return !(
-            birdRect.x + birdRect.width < pipeRect.x ||
-            birdRect.x > pipeRect.x + pipeRect.width ||
-            birdRect.y + birdRect.height < pipeRect.y ||
-            birdRect.y > pipeRect.y + pipeRect.height
-        );
+        return !(birdRect.x + birdRect.width < pipeRect.x ||
+                birdRect.x > pipeRect.x + pipeRect.width ||
+                birdRect.y + birdRect.height < pipeRect.y ||
+                birdRect.y > pipeRect.y + pipeRect.height);
     });
 }
 
 async function endGame() {
-    gameState.isPlaying = false;
-    clearInterval(gameState.gameLoopInterval);
-    clearInterval(gameState.pipeInterval);
+    isGameActive = false;
+    clearInterval(gameInterval);
+    clearInterval(pipeInterval);
 
-    // Очистка труб
-    gameState.pipes.forEach(pipe => pipe.element.remove());
-    gameState.pipes = [];
-
-    // Обновление рекорда в Firestore
-    if (currentUser) {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userRef);
-        const currentHighScore = userDoc.data().highScore || 0;
-
-        if (gameState.score > currentHighScore) {
-            await updateDoc(userRef, {
-                highScore: gameState.score
-            });
+    if (score > highScore) {
+        try {
+            await updateDoc(doc(db, 'users', currentUser.uid), { highScore: score });
+            highScore = score;
+            updateLeaderboard();
+        } catch (error) {
+            alert('Error saving score: ' + error.message);
         }
     }
 
-    alert(`Game Over! Your score: ${gameState.score}`);
-    showGameMenu();
+    if(confirm(`Game Over! Score: ${score}\nPlay again?`)) startGame();
 }
 
-function showGameMenu() {
-    document.getElementById('game').style.display = 'none';
-    document.getElementById('game-menu').style.display = 'block';
+function resetGame() {
+    score = 0;
+    birdPosition = 200;
+    pipes = [];
+    elements.bird.style.top = '200px';
+    elements.scoreDisplay.textContent = `High: ${highScore} | Current: 0`;
+    elements.gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
 }
 
-async function showLeaderboard() {
-    const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
-    const querySnapshot = await getDocs(q);
-
-    const leaderboardList = document.getElementById('leaderboard-list');
-    leaderboardList.innerHTML = '';
-
-    querySnapshot.forEach((doc, index) => {
-        const user = doc.data();
-        leaderboardList.innerHTML += `
-            <li>${index + 1}. ${user.username} - ${user.highScore}</li>
-        `;
-    });
-
-    document.getElementById('leaderboard').style.display = 'block';
+async function updateLeaderboard() {
+    try {
+        const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
+        const querySnapshot = await getDocs(q);
+        elements.leaderboardList.innerHTML = querySnapshot.docs
+            .map((doc, index) => `
+                <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                    ${index + 1}. ${doc.data().username} - ${doc.data().highScore}
+                </li>
+            `).join('');
+    } catch (error) {
+        alert('Error loading leaderboard: ' + error.message);
+    }
 }
 
-function hideLeaderboard() {
-    document.getElementById('leaderboard').style.display = 'none';
+window.showLeaderboard = () => {
+    elements.leaderboard.style.display = 'block';
+    elements.pauseMenu.style.display = 'none';
+};
+
+window.closeLeaderboard = () => {
+    elements.leaderboard.style.display = 'none';
+};
+
+function togglePause() {
+    isPaused = !isPaused;
+    elements.pauseMenu.style.display = isPaused ? 'block' : 'none';
+    if(isPaused) {
+        clearInterval(gameInterval);
+        clearInterval(pipeInterval);
+    } else {
+        startGame();
+    }
 }
 
 function handleFlap(e) {
     if (e.type === 'touchstart') e.preventDefault();
-    if (gameState.isPlaying) {
-        gameState.velocity = FLAP_FORCE;
+    if (isGameActive) birdPosition -= 35;
+}
+
+function animateBird() {
+    elements.bird.style.transform = `translateY(-50%) rotate(${Date.now() % 200 < 100 ? -20 : 10}deg)`;
+    if(isGameActive) requestAnimationFrame(animateBird);
+}
+
+async function handleLogout() {
+    try {
+        await signOut(auth);
+        currentUser = null;
+        elements.loginForm.style.display = 'block';
+        elements.gameContent.style.display = 'none';
+        elements.pauseMenu.style.display = 'none';
+        location.reload();
+    } catch (error) {
+        alert('Logout error: ' + error.message);
     }
 }
+
+// Инициализация
+initEventListeners();
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        loadUserData();
+        elements.loginForm.style.display = 'none';
+        elements.gameContent.style.display = 'block';
+        startGame();
+    } else {
+        elements.loginForm.style.display = 'block';
+        elements.gameContent.style.display = 'none';
+    }
+});
