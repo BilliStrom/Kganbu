@@ -32,7 +32,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let isLoginMode = true;
-let currentUser = null;
 
 document.getElementById('logout-button').addEventListener('click', handleLogout);
 document.getElementById('auth-button').addEventListener('click', handleAuth);
