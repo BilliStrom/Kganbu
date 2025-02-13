@@ -54,6 +54,13 @@ const elements = {
     pauseMenu: document.getElementById('pause-menu')
 };
 
+// Привязка событий
+document.getElementById('play-button').addEventListener('click', startGame);
+document.getElementById('leaderboard-button').addEventListener('click', showLeaderboard);
+document.getElementById('close-leaderboard').addEventListener('click', hideLeaderboard);
+document.addEventListener('keydown', handleFlap);
+document.addEventListener('touchstart', handleFlap);
+
 // Инициализация обработчиков событий
 elements.pauseButton.addEventListener('click', togglePause);
 document.addEventListener('keydown', handleFlap);
