@@ -43,12 +43,6 @@ function toggleAuthMode() {
     document.getElementById('switch-mode').textContent = isLoginMode ? 'Switch to Register' : 'Switch to Login';
 }
 
-// Функция для выхода из системы
-async function handleLogout() {
-    try {
-        await signOut(auth); // Выход из Firebase
-        alert('You have been logged out successfully!');
-
 async function handleAuth() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
