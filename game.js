@@ -133,6 +133,40 @@ function checkCollision() {
     });
 }
 
+window.register = async () => {
+    const username = document.getElementById('register-username').value.trim();
+    const password = document.getElementById('register-password').value.trim();
+
+    if (!validateUsername(username)) {
+        alert('Имя пользователя должно содержать 3-15 символов (только буквы и цифры).');
+        return;
+    }
+
+    if (password.length < 6) {
+        alert('Пароль должен содержать минимум 6 символов.');
+        return;
+    }
+
+    const email = `${username}@knbgame.com`;
+
+    try {
+        // Регистрация пользователя
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+        // Создание записи пользователя в Firestore
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+            username: username.toLowerCase(),
+            highScore: 0,
+            created: new Date().toISOString()
+        });
+
+        alert('Регистрация успешна! Пожалуйста, войдите.');
+        showLoginForm();
+    } catch (error) {
+        alert('Ошибка регистрации: ' + error.message);
+    }
+};
+
 async function endGame() {
     gameState.isPlaying = false;
     clearInterval(gameState.gameLoopInterval);
