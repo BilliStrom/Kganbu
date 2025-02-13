@@ -32,7 +32,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let isLoginMode = true;
+let currentUser = null;
 
+document.getElementById('logout-button').addEventListener('click', handleLogout);
 document.getElementById('auth-button').addEventListener('click', handleAuth);
 document.getElementById('switch-mode').addEventListener('click', toggleAuthMode);
 
@@ -41,6 +43,12 @@ function toggleAuthMode() {
     document.getElementById('auth-button').textContent = isLoginMode ? 'Login' : 'Register';
     document.getElementById('switch-mode').textContent = isLoginMode ? 'Switch to Register' : 'Switch to Login';
 }
+
+// Функция для выхода из системы
+async function handleLogout() {
+    try {
+        await signOut(auth); // Выход из Firebase
+        alert('You have been logged out successfully!');
 
 async function handleAuth() {
     const username = document.getElementById('username').value.trim();
