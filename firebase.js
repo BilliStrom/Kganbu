@@ -9,8 +9,7 @@ import {
 import { 
     getFirestore, 
     doc, 
-    setDoc,
-getDoc, 
+    setDoc, 
     updateDoc, 
     collection, 
     query, 
@@ -26,14 +25,14 @@ const firebaseConfig = {
             storageBucket: "knb-clicker-game.firebasestorage.app",
             messagingSenderId: "810664187137",
             appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
-        };
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let isLoginMode = true;
 
-addEventListener('click', handleLogout);
 document.getElementById('auth-button').addEventListener('click', handleAuth);
 document.getElementById('switch-mode').addEventListener('click', toggleAuthMode);
 
