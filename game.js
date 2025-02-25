@@ -5,20 +5,22 @@ class FlappyGame {
         this.scoreDisplay = document.getElementById('current-score');
         this.highscoreDisplay = document.getElementById('highscore');
         
-        this.gravity = 7;
-        this.jumpForce = -70;
-        this.pipeSpeed = 1;
+        // Параметры игры
+        this.gravity = 0.5;
+        this.jumpForce = -10;
+        this.pipeSpeed = 3;
         this.score = 0;
         this.highscore = 0;
         this.isPlaying = false;
         this.isPaused = false;
         this.birdPosition = 200;
         this.pipes = [];
+        this.lastFrameTime = Date.now();
         
-        this.init();
+        this.initEventListeners();
     }
 
-    init() {
+    initEventListeners() {
         document.addEventListener('keydown', (e) => this.handleInput(e));
         document.addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -27,13 +29,14 @@ class FlappyGame {
     }
 
     handleInput(e) {
-        if((e.key === ' ' || e.type === 'touchstart') && this.isPlaying) {
+        if ((e.key === ' ' || e.type === 'touchstart') && this.isPlaying) {
             this.birdPosition += this.jumpForce;
             this.updateBirdPosition();
         }
     }
 
     startGame() {
+        if (this.isPlaying) return;
         this.resetGame();
         this.isPlaying = true;
         this.gameLoop();
@@ -41,9 +44,13 @@ class FlappyGame {
     }
 
     gameLoop() {
-        if(!this.isPlaying || this.isPaused) return;
+        if (!this.isPlaying || this.isPaused) return;
 
-        this.birdPosition += this.gravity;
+        const now = Date.now();
+        const deltaTime = (now - this.lastFrameTime) / 16;
+        this.lastFrameTime = now;
+
+        this.birdPosition += this.gravity * deltaTime;
         this.updateBirdPosition();
         
         this.updatePipes();
@@ -64,54 +71,46 @@ class FlappyGame {
             'bottom'
         );
 
-        this.pipes.push({ top: topPipe, bottom: bottomPipe, scored: false });
+        this.pipes.push({ 
+            top: topPipe, 
+            bottom: bottomPipe, 
+            scored: false 
+        });
     }
 
     createPipeElement(height, position) {
         const pipe = document.createElement('div');
         pipe.className = `pipe pipe-${position}`;
-        pipe.style.height = `${height}px`;
-        pipe.style.left = '100%';
-        position === 'top' 
-            ? pipe.style.top = '0' 
-            : pipe.style.bottom = '0';
-        
+        pipe.style.cssText = `
+            height: ${height}px;
+            width: 60px;
+            left: 100%;
+            position: absolute;
+            background: #2ecc71;
+        `;
+        position === 'top' ? pipe.style.top = '0' : pipe.style.bottom = '0';
         this.gameArea.appendChild(pipe);
         return pipe;
     }
 
     updatePipes() {
-    this.pipes.forEach((pipe, index) => {
-        // Получаем текущую позицию в пикселях
-        const currentLeft = parseInt(pipe.top.style.left.replace('px', '')) || window.innerWidth;
-        const newLeft = currentLeft - this.pipeSpeed * 2; // Увеличим скорость движения
-        
-        // Обновляем позицию
-        pipe.top.style.left = `${newLeft}px`;
-        pipe.bottom.style.left = `${newLeft}px`;
+        this.pipes.forEach((pipe, index) => {
+            const currentLeft = parseFloat(pipe.top.style.left || '100%');
+            const newLeft = currentLeft - this.pipeSpeed;
 
-        // Проверка на выход за границы
-        if(newLeft < -60) { // -60px (ширина трубы)
-            pipe.top.remove();
-            pipe.bottom.remove();
-            this.pipes.splice(index, 1);
-            console.log('Pipe removed'); // Для отладки
-        }
+            pipe.top.style.left = `${newLeft}%`;
+            pipe.bottom.style.left = `${newLeft}%`;
 
-        // Обновление счета
-        if(newLeft === 50 && !pipe.scored) {
-            this.score++;
-            this.scoreDisplay.textContent = this.score;
-            pipe.scored = true;
-        }
-    });
-}
-
-            // Remove off-screen pipes
-            if(newLeft < -20) {
+            if (newLeft < -60) {
                 pipe.top.remove();
                 pipe.bottom.remove();
                 this.pipes.splice(index, 1);
+            }
+
+            if (newLeft < 40 && !pipe.scored) {
+                this.score++;
+                this.scoreDisplay.textContent = this.score;
+                pipe.scored = true;
             }
         });
     }
@@ -119,14 +118,14 @@ class FlappyGame {
     checkCollisions() {
         const birdRect = this.bird.getBoundingClientRect();
         
-        for(const pipe of this.pipes) {
+        for (const pipe of this.pipes) {
             const topPipeRect = pipe.top.getBoundingClientRect();
             const bottomPipeRect = pipe.bottom.getBoundingClientRect();
 
-            if(this.isColliding(birdRect, topPipeRect) || 
-               this.isColliding(birdRect, bottomPipeRect) ||
-               birdRect.top < 0 || 
-               birdRect.bottom > this.gameArea.offsetHeight) {
+            if (this.isColliding(birdRect, topPipeRect) || 
+                this.isColliding(birdRect, bottomPipeRect) ||
+                birdRect.top < 0 || 
+                birdRect.bottom > this.gameArea.offsetHeight) {
                 this.gameOver();
                 return;
             }
@@ -143,16 +142,12 @@ class FlappyGame {
     gameOver() {
         this.isPlaying = false;
         clearInterval(this.pipeGenerator);
-        document.getElementById('final-score').textContent = this.score;
+        this.pipes.forEach(pipe => {
+            pipe.top.remove();
+            pipe.bottom.remove();
+        });
+        this.pipes = [];
         document.getElementById('end-screen').classList.remove('hidden');
-        
-        if(this.score > this.highscore) {
-            this.highscore = this.score;
-            this.highscoreDisplay.textContent = this.highscore;
-            if(window.updateHighscore) {
-                window.updateHighscore(this.highscore);
-            }
-        }
     }
 
     resetGame() {
@@ -160,11 +155,6 @@ class FlappyGame {
         this.scoreDisplay.textContent = '0';
         this.birdPosition = 200;
         this.updateBirdPosition();
-        this.pipes.forEach(pipe => {
-            pipe.top.remove();
-            pipe.bottom.remove();
-        });
-        this.pipes = [];
         document.getElementById('end-screen').classList.add('hidden');
     }
 
@@ -174,17 +164,9 @@ class FlappyGame {
 
     togglePause() {
         this.isPaused = !this.isPaused;
-        if(!this.isPaused) this.gameLoop();
+        if (!this.isPaused) this.gameLoop();
     }
 }
 
-// Initialize game
+// Инициализация игры
 const game = new FlappyGame();
-
-// UI Controls
-window.togglePause = () => game.togglePause();
-window.restartGame = () => game.startGame();
-window.showMenu = () => {
-    document.getElementById('game-section').style.display = 'none';
-    document.getElementById('auth-box').style.display = 'block';
-};
