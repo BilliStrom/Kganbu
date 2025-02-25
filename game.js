@@ -7,7 +7,7 @@ class FlappyGame {
         
         this.gravity = 0.03;
         this.jumpForce = -15;
-        this.pipeSpeed = 1;
+        this.pipeSpeed = 3;
         this.score = 0;
         this.highscore = 0;
         this.isPlaying = false;
