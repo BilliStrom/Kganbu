@@ -5,9 +5,9 @@ class FlappyGame {
         this.scoreDisplay = document.getElementById('current-score');
         this.highscoreDisplay = document.getElementById('highscore');
         
-        this.gravity = 0.03;
+        this.gravity = -1;
         this.jumpForce = -15;
-        this.pipeSpeed = 3;
+        this.pipeSpeed = 1.5;
         this.score = 0;
         this.highscore = 0;
         this.isPlaying = false;
