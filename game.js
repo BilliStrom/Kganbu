@@ -1,337 +1,178 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    onAuthStateChanged, 
-    signOut 
-} from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc, 
-    updateDoc, 
-    collection, 
-    query, 
-    orderBy, 
-    limit, 
-    getDocs 
-} from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyA7IL_lkuJ7klzKFJCwFjci7eOW-aLQrUw",
-    authDomain: "knb-clicker-game.firebaseapp.com",
-    projectId: "knb-clicker-game",
-    storageBucket: "knb-clicker-game.firebasestorage.app",
-    messagingSenderId: "810664187137",
-    appId: "1:810664187137:web:b53c6e6ba9bfbadc6c7700"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let currentUser = null;
-let score = 0;
-let highScore = 0;
-let gameInterval;
-let pipeInterval;
-let birdPosition = 200;
-let gravity = 2.5;
-let isGameActive = false;
-let isPaused = false;
-let pipes = [];
-
-const elements = {
-    loginForm: document.getElementById('login-form'),
-    gameContent: document.getElementById('game-content'),
-    scoreDisplay: document.getElementById('score'),
-    leaderboard: document.getElementById('leaderboard'),
-    leaderboardList: document.getElementById('leaderboard-list'),
-    bird: document.getElementById('bird'),
-    pauseButton: document.getElementById('pause-button'),
-    pauseMenu: document.getElementById('pause-menu'),
-    logoutButton: document.getElementById('logout-button')
-};
-
-// Инициализация обработчиков
-const initEventListeners = () => {
-    elements.pauseButton.addEventListener('click', togglePause);
-    elements.logoutButton.addEventListener('click', handleLogout);
-    document.addEventListener('keydown', handleFlap);
-    document.addEventListener('touchstart', handleFlap, { passive: false });
-};
-
-const validateUsername = (username) => /^[A-Za-z0-9]{3,15}$/.test(username);
-
-window.showRegisterForm = () => {
-    elements.loginForm.innerHTML = `
-        <div class="auth-box">
-            <input type="text" id="register-username" placeholder="Username (3-15 chars)" autocapitalize="none">
-            <input type="password" id="register-password" placeholder="Password (6+ chars)">
-            <button class="game-button" style="background: #3498db;" onclick="register()">Register</button>
-            <button class="game-button" style="background: #95a5a6;" onclick="showLoginForm()">Back to Login</button>
-        </div>
-    `;
-};
-
-window.showLoginForm = () => {
-    elements.loginForm.innerHTML = `
-        <div class="auth-box">
-            <input type="text" id="login-username" placeholder="Username" autocapitalize="none">
-            <input type="password" id="login-password" placeholder="Password">
-            <button class="game-button" style="background: #3498db;" onclick="login()">Login</button>
-            <button class="game-button" style="background: #95a5a6;" onclick="showRegisterForm()">Register</button>
-        </div>
-    `;
-};
-
-window.login = async () => {
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value.trim();
-
-    if (!validateUsername(username)) {
-        alert('Invalid username! Use 3-15 alphanumeric characters.');
-        return;
-    }
-
-    try {
-        const email = `${username}@knbgame.com`;
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        currentUser = userCredential.user;
-        await loadUserData();
-        elements.loginForm.style.display = 'none';
-        elements.gameContent.style.display = 'block';
-        startGame();
-    } catch (error) {
-        alert(error.message.replace('Firebase: ', ''));
-    }
-};
-
-window.register = async () => {
-    const username = document.getElementById('register-username').value.trim();
-    const password = document.getElementById('register-password').value.trim();
-
-    if (!validateUsername(username)) {
-        alert('Invalid username! Use 3-15 alphanumeric characters.');
-        return;
-    }
-    
-    if (password.length < 6) {
-        alert('Password must be at least 6 characters');
-        return;
-    }
-
-    try {
-        const email = `${username}@knbgame.com`;
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+class FlappyGame {
+    constructor() {
+        this.gameArea = document.getElementById('game-area');
+        this.bird = document.getElementById('bird');
+        this.scoreDisplay = document.getElementById('current-score');
+        this.highscoreDisplay = document.getElementById('highscore');
         
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
-            username: username.toLowerCase(),
-            highScore: 0,
-            created: new Date().toISOString()
+        this.gravity = 0.5;
+        this.jumpForce = -10;
+        this.pipeSpeed = 3;
+        this.score = 0;
+        this.highscore = 0;
+        this.isPlaying = false;
+        this.isPaused = false;
+        this.birdPosition = 200;
+        this.pipes = [];
+        
+        this.init();
+    }
+
+    init() {
+        document.addEventListener('keydown', (e) => this.handleInput(e));
+        document.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.handleInput(e);
         });
-
-        alert('Registration successful! Please login.');
-        showLoginForm();
-    } catch (error) {
-        alert(error.message.replace('Firebase: ', ''));
-    }
-};
-
-async function loadUserData() {
-    try {
-        const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
-        if (docSnap.exists()) {
-            highScore = docSnap.data().highScore;
-            elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
-        }
-        updateLeaderboard();
-    } catch (error) {
-        alert('Error loading user data: ' + error.message);
-    }
-}
-
-function startGame() {
-    if(isPaused) return;
-    resetGame();
-    isGameActive = true;
-    animateBird();
-
-    gameInterval = setInterval(gameLoop, 20);
-    pipeInterval = setInterval(createPipe, 1500);
-}
-
-function gameLoop() {
-    if (!isGameActive || isPaused) return;
-    
-    birdPosition += gravity;
-    elements.bird.style.top = `${birdPosition}px`;
-
-    if (birdPosition <= 0 || birdPosition >= 560 || checkCollision()) {
-        endGame();
     }
 
-    updatePipes();
-}
-
-function createPipe() {
-    const gap = 150;
-    const minHeight = 80;
-    const maxHeight = 350;
-    const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
-
-    const topPipe = document.createElement('div');
-    topPipe.className = 'pipe';
-    topPipe.style.height = `${topHeight}px`;
-    topPipe.style.top = '0';
-    topPipe.style.left = '100%';
-
-    const bottomPipe = document.createElement('div');
-    bottomPipe.className = 'pipe';
-    bottomPipe.style.height = `${600 - topHeight - gap}px`;
-    bottomPipe.style.bottom = '0';
-    bottomPipe.style.left = '100%';
-
-    elements.gameContent.append(topPipe, bottomPipe);
-    pipes.push({ x: 400, element: topPipe, height: topHeight, isTop: true, scored: false }, 
-               { x: 400, element: bottomPipe, height: 600 - topHeight - gap, isTop: false });
-}
-
-function updatePipes() {
-    pipes.forEach(pipe => {
-        pipe.x -= 3;
-        pipe.element.style.left = `${pipe.x}px`;
-
-        if (pipe.x + 60 === 50 && pipe.isTop && !pipe.scored) {
-            pipe.scored = true;
-            score++;
-            elements.scoreDisplay.textContent = `High: ${highScore} | Current: ${score}`;
-        }
-    });
-    pipes = pipes.filter(pipe => pipe.x > -60);
-}
-
-function checkCollision() {
-    const birdRect = {
-        x: 50,
-        y: birdPosition,
-        width: 40,
-        height: 40
-    };
-
-    return pipes.some(pipe => {
-        const pipeRect = {
-            x: pipe.x,
-            y: pipe.isTop ? 0 : 600 - pipe.height,
-            width: 60,
-            height: pipe.height
-        };
-
-        return !(birdRect.x + birdRect.width < pipeRect.x ||
-                birdRect.x > pipeRect.x + pipeRect.width ||
-                birdRect.y + birdRect.height < pipeRect.y ||
-                birdRect.y > pipeRect.y + pipeRect.height);
-    });
-}
-
-async function endGame() {
-    isGameActive = false;
-    clearInterval(gameInterval);
-    clearInterval(pipeInterval);
-
-    if (score > highScore) {
-        try {
-            await updateDoc(doc(db, 'users', currentUser.uid), { highScore: score });
-            highScore = score;
-            updateLeaderboard();
-        } catch (error) {
-            alert('Error saving score: ' + error.message);
+    handleInput(e) {
+        if((e.key === ' ' || e.type === 'touchstart') && this.isPlaying) {
+            this.birdPosition += this.jumpForce;
+            this.updateBirdPosition();
         }
     }
 
-    if(confirm(`Game Over! Score: ${score}\nPlay again?`)) startGame();
-}
+    startGame() {
+        this.resetGame();
+        this.isPlaying = true;
+        this.gameLoop();
+        this.pipeGenerator = setInterval(() => this.createPipe(), 1500);
+    }
 
-function resetGame() {
-    score = 0;
-    birdPosition = 200;
-    pipes = [];
-    elements.bird.style.top = '200px';
-    elements.scoreDisplay.textContent = `High: ${highScore} | Current: 0`;
-    elements.gameContent.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
-}
+    gameLoop() {
+        if(!this.isPlaying || this.isPaused) return;
 
-async function updateLeaderboard() {
-    try {
-        const q = query(collection(db, 'users'), orderBy('highScore', 'desc'), limit(10));
-        const querySnapshot = await getDocs(q);
-        elements.leaderboardList.innerHTML = querySnapshot.docs
-            .map((doc, index) => `
-                <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
-                    ${index + 1}. ${doc.data().username} - ${doc.data().highScore}
-                </li>
-            `).join('');
-    } catch (error) {
-        alert('Error loading leaderboard: ' + error.message);
+        this.birdPosition += this.gravity;
+        this.updateBirdPosition();
+        
+        this.updatePipes();
+        this.checkCollisions();
+        
+        requestAnimationFrame(() => this.gameLoop());
+    }
+
+    createPipe() {
+        const gap = 150;
+        const minHeight = 80;
+        const maxHeight = 350;
+        const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+
+        const topPipe = this.createPipeElement(topHeight, 'top');
+        const bottomPipe = this.createPipeElement(
+            this.gameArea.offsetHeight - topHeight - gap, 
+            'bottom'
+        );
+
+        this.pipes.push({ top: topPipe, bottom: bottomPipe, scored: false });
+    }
+
+    createPipeElement(height, position) {
+        const pipe = document.createElement('div');
+        pipe.className = `pipe pipe-${position}`;
+        pipe.style.height = `${height}px`;
+        pipe.style.left = '100%';
+        position === 'top' 
+            ? pipe.style.top = '0' 
+            : pipe.style.bottom = '0';
+        
+        this.gameArea.appendChild(pipe);
+        return pipe;
+    }
+
+    updatePipes() {
+        this.pipes.forEach((pipe, index) => {
+            const currentLeft = parseInt(pipe.top.style.left) || 100;
+            const newLeft = currentLeft - this.pipeSpeed;
+            
+            pipe.top.style.left = `${newLeft}%`;
+            pipe.bottom.style.left = `${newLeft}%`;
+
+            // Score update
+            if(newLeft < 40 && !pipe.scored) {
+                this.score++;
+                this.scoreDisplay.textContent = this.score;
+                pipe.scored = true;
+            }
+
+            // Remove off-screen pipes
+            if(newLeft < -20) {
+                pipe.top.remove();
+                pipe.bottom.remove();
+                this.pipes.splice(index, 1);
+            }
+        });
+    }
+
+    checkCollisions() {
+        const birdRect = this.bird.getBoundingClientRect();
+        
+        for(const pipe of this.pipes) {
+            const topPipeRect = pipe.top.getBoundingClientRect();
+            const bottomPipeRect = pipe.bottom.getBoundingClientRect();
+
+            if(this.isColliding(birdRect, topPipeRect) || 
+               this.isColliding(birdRect, bottomPipeRect) ||
+               birdRect.top < 0 || 
+               birdRect.bottom > this.gameArea.offsetHeight) {
+                this.gameOver();
+                return;
+            }
+        }
+    }
+
+    isColliding(rect1, rect2) {
+        return !(rect1.right < rect2.left || 
+                rect1.left > rect2.right || 
+                rect1.bottom < rect2.top || 
+                rect1.top > rect2.bottom);
+    }
+
+    gameOver() {
+        this.isPlaying = false;
+        clearInterval(this.pipeGenerator);
+        document.getElementById('final-score').textContent = this.score;
+        document.getElementById('end-screen').classList.remove('hidden');
+        
+        if(this.score > this.highscore) {
+            this.highscore = this.score;
+            this.highscoreDisplay.textContent = this.highscore;
+            if(window.updateHighscore) {
+                window.updateHighscore(this.highscore);
+            }
+        }
+    }
+
+    resetGame() {
+        this.score = 0;
+        this.scoreDisplay.textContent = '0';
+        this.birdPosition = 200;
+        this.updateBirdPosition();
+        this.pipes.forEach(pipe => {
+            pipe.top.remove();
+            pipe.bottom.remove();
+        });
+        this.pipes = [];
+        document.getElementById('end-screen').classList.add('hidden');
+    }
+
+    updateBirdPosition() {
+        this.bird.style.top = `${this.birdPosition}px`;
+    }
+
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        if(!this.isPaused) this.gameLoop();
     }
 }
 
-window.showLeaderboard = () => {
-    elements.leaderboard.style.display = 'block';
-    elements.pauseMenu.style.display = 'none';
+// Initialize game
+const game = new FlappyGame();
+
+// UI Controls
+window.togglePause = () => game.togglePause();
+window.restartGame = () => game.startGame();
+window.showMenu = () => {
+    document.getElementById('game-section').style.display = 'none';
+    document.getElementById('auth-box').style.display = 'block';
 };
-
-window.closeLeaderboard = () => {
-    elements.leaderboard.style.display = 'none';
-};
-
-function togglePause() {
-    isPaused = !isPaused;
-    elements.pauseMenu.style.display = isPaused ? 'block' : 'none';
-    if(isPaused) {
-        clearInterval(gameInterval);
-        clearInterval(pipeInterval);
-    } else {
-        startGame();
-    }
-}
-
-function handleFlap(e) {
-    if (e.type === 'touchstart') e.preventDefault();
-    if (isGameActive) birdPosition -= 35;
-}
-
-function animateBird() {
-    elements.bird.style.transform = `translateY(-50%) rotate(${Date.now() % 200 < 100 ? -20 : 10}deg)`;
-    if(isGameActive) requestAnimationFrame(animateBird);
-}
-
-async function handleLogout() {
-    try {
-        await signOut(auth);
-        currentUser = null;
-        elements.loginForm.style.display = 'block';
-        elements.gameContent.style.display = 'none';
-        elements.pauseMenu.style.display = 'none';
-        location.reload();
-    } catch (error) {
-        alert('Logout error: ' + error.message);
-    }
-}
-
-// Инициализация
-initEventListeners();
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        loadUserData();
-        elements.loginForm.style.display = 'none';
-        elements.gameContent.style.display = 'block';
-        startGame();
-    } else {
-        elements.loginForm.style.display = 'block';
-        elements.gameContent.style.display = 'none';
-    }
-});
