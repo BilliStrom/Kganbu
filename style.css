@@ -1,77 +1,112 @@
-body {
-    font-family: Arial, sans-serif;
+:root {
+    --primary: #2ecc71;
+    --secondary: #3498db;
+    --background: #2c3e50;
+    --text: #ecf0f1;
+}
+
+* {
+    box-sizing: border-box;
     margin: 0;
-    background: #2c3e50;
-    color: white;
+    padding: 0;
+}
+
+body {
+    font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    touch-action: manipulation;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+}
+
+#game-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.form-container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.9);
+    font-size: 16px;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.secondary {
+    background: var(--secondary);
+}
+
+#game-area {
+    position: relative;
+    height: 600px;
+    background: linear-gradient(to bottom, #4ec0ca, #3aa3bf);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#bird {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    left: 50px;
+    background: #ffd700;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    transition: top 0.3s ease;
 }
 
 .pipe {
     position: absolute;
     width: 60px;
     background: #2ecc71;
-    transition: left 0.05s linear;
-}
-#game-container {
-    text-align: center;
+    transition: left 0.1s linear;
 }
 
-input {
-    display: block;
-    margin: 10px auto;
-    padding: 10px;
-    width: 80%;
-    max-width: 300px;
-}
-
-button {
-    padding: 10px 20px;
-    margin: 5px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    background: #3498db;
-    color: white;
-}
-
-#game {
-    position: relative;
-    width: 400px;
-    height: 600px;
-    background: #4ec0ca;
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-#bird {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: #ffd700;
-    border-radius: 50%;
-    left: 50px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-#score {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    font-size: 24px;
-}
-
-#leaderboard {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    color: black;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+/* Mobile Optimization */
+@media (max-width: 480px) {
+    #game-container {
+        padding: 10px;
+    }
+    
+    .form-container {
+        padding: 15px;
+    }
+    
+    input, .btn {
+        font-size: 14px;
+        padding: 10px;
+    }
 }
