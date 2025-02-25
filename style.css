@@ -5,6 +5,10 @@
     --text: #ecf0f1;
 }
 
+#bird {
+    transition: top 0.15s ease-out;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
