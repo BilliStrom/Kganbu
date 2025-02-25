@@ -15,6 +15,18 @@
     padding: 0;
 }
 
+.pipe {
+    transition: left 0.1s linear;
+}
+
+#bird {
+    transition: top 0.15s ease-out;
+}
+
+.hidden {
+    display: none !important;
+}
+
 body {
     font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
     background: var(--background);
