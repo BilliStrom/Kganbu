@@ -5,6 +5,9 @@ class FlappyGame {
         this.scoreDisplay = document.getElementById('current-score');
         this.highscoreDisplay = document.getElementById('highscore');
         
+// Должна быть корректная инициализация игры
+     const game = new FlappyGame(); 
+
         // Параметры игры
         this.gravity = 0.5;
         this.jumpForce = -10;
