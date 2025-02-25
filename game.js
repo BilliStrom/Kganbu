@@ -81,19 +81,31 @@ class FlappyGame {
     }
 
     updatePipes() {
-        this.pipes.forEach((pipe, index) => {
-            const currentLeft = parseInt(pipe.top.style.left) || 100;
-            const newLeft = currentLeft - this.pipeSpeed;
-            
-            pipe.top.style.left = `${newLeft}%`;
-            pipe.bottom.style.left = `${newLeft}%`;
+    this.pipes.forEach((pipe, index) => {
+        // Получаем текущую позицию в пикселях
+        const currentLeft = parseInt(pipe.top.style.left.replace('px', '')) || window.innerWidth;
+        const newLeft = currentLeft - this.pipeSpeed * 2; // Увеличим скорость движения
+        
+        // Обновляем позицию
+        pipe.top.style.left = `${newLeft}px`;
+        pipe.bottom.style.left = `${newLeft}px`;
 
-            // Score update
-            if(newLeft < 40 && !pipe.scored) {
-                this.score++;
-                this.scoreDisplay.textContent = this.score;
-                pipe.scored = true;
-            }
+        // Проверка на выход за границы
+        if(newLeft < -60) { // -60px (ширина трубы)
+            pipe.top.remove();
+            pipe.bottom.remove();
+            this.pipes.splice(index, 1);
+            console.log('Pipe removed'); // Для отладки
+        }
+
+        // Обновление счета
+        if(newLeft === 50 && !pipe.scored) {
+            this.score++;
+            this.scoreDisplay.textContent = this.score;
+            pipe.scored = true;
+        }
+    });
+}
 
             // Remove off-screen pipes
             if(newLeft < -20) {
