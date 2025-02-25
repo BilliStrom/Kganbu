@@ -1,6 +1,3 @@
-
-const game = new FlappyGame(); 
-
 class FlappyGame {
     constructor() {
         this.gameArea = document.getElementById('game-area');
@@ -27,7 +24,7 @@ class FlappyGame {
         document.addEventListener('keydown', (e) => this.handleInput(e));
         document.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            this.handleInput(e);
+            handleInput(e);
         });
     }
 
