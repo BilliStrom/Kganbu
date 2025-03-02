@@ -1,62 +1,222 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flappy KNB</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentAll - Аренда всего</title>
+    <style>
+        /* Сброс стилей */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Шапка */
+        header {
+            background: #1a365d;
+            color: white;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Навигация */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #63b3ed;
+        }
+
+        /* Основной контент */
+        main {
+            margin-top: 80px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Карточки товаров */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+
+        .item-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .item-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .item-info {
+            padding: 1rem;
+        }
+
+        .price {
+            color: #2b6cb0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        /* Форма фильтров */
+        .filters {
+            background: #f7fafc;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .filter-group {
+            margin-bottom: 1rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+        }
+
+        /* Кнопки */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn-primary {
+            background: #2b6cb0;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <!-- Auth Section -->
-        <div id="auth-box">
-            <div class="form-container" id="login-form">
-                <h2>🎮 Kganbu Game</h2>
-                <input type="text" id="username" placeholder="Username" autocapitalize="none">
-                <input type="password" id="password" placeholder="Password">
-                <button class="btn" onclick="login()">Login</button>
-                <button class="btn secondary" onclick="showRegister()">Create Account</button>
-            </div>
+    <header>
+        <nav>
+            <h1>RentAll</h1>
+            <ul class="nav-links">
+                <li><a href="#home">Главная</a></li>
+                <li><a href="#items">Товары</a></li>
+                <li><a href="#about">О нас</a></li>
+                <li><a href="#contact">Контакты</a></li>
+            </ul>
+        </nav>
+    </header>
 
-            <div class="form-container" id="register-form" style="display: none;">
-                <h2>✨ New Account</h2>
-                <input type="text" id="reg-username" placeholder="Username (3-15 chars)" autocapitalize="none">
-                <input type="password" id="reg-password" placeholder="Password (6+ chars)">
-                <button class="btn" onclick="register()">Register</button>
-                <button class="btn secondary" onclick="showLogin()">Back to Login</button>
+    <main>
+        <section class="filters">
+            <h2>Найдите нужную вещь</h2>
+            <div class="filter-group">
+                <input type="text" placeholder="Что ищете?">
             </div>
-        </div>
+            <div class="filter-group">
+                <select>
+                    <option>Все категории</option>
+                    <option>Электроника</option>
+                    <option>Транспорт</option>
+                    <option>Недвижимость</option>
+                </select>
+            </div>
+            <button class="btn btn-primary">Поиск</button>
+        </section>
 
-        <!-- Game Section -->
-        <div id="game-section" style="display: none;">
-            <div id="game-header">
-                <div id="score-box">
-                    <span>🏆 <span id="highscore">0</span></span>
-                    <span>🎯 <span id="current-score">0</span></span>
+        <div class="items-grid">
+            <!-- Карточка товара 1 -->
+            <article class="item-card animate-fade-in">
+                <img src="https://via.placeholder.com/300x200" alt="Велосипед" class="item-image">
+                <div class="item-info">
+                    <h3>Горный велосипед</h3>
+                    <p class="price">500 руб/день</p>
+                    <p>Идеальное состояние, 24 скорости</p>
+                    <button class="btn btn-primary">Арендовать</button>
                 </div>
-                <button id="pause-btn" onclick="togglePause()">⏸</button>
-            </div>
-            
-            <div id="game-area">
-                <div id="bird">KNB</div>
-                <div id="end-screen" class="hidden">
-                    <h3>Game Over!</h3>
-                    <p>Score: <span id="final-score">0</span></p>
-                    <button class="btn" onclick="restartGame()">Play Again</button>
-                    <button class="btn secondary" onclick="showMenu()">Main Menu</button>
+            </article>
+
+            <!-- Карточка товара 2 -->
+            <article class="item-card animate-fade-in">
+                <img src="https://via.placeholder.com/300x200" alt="Камера" class="item-image">
+                <div class="item-info">
+                    <h3>Фотоаппарат Canon</h3>
+                    <p class="price">1000 руб/день</p>
+                    <p>Профессиональная камера с объективом</p>
+                    <button class="btn btn-primary">Арендовать</button>
                 </div>
-            </div>
+            </article>
         </div>
+    </main>
 
-        <!-- Leaderboard -->
-        <div id="leaderboard" class="hidden">
-            <h3>🏆 Top Players</h3>
-            <ul id="leaderboard-list"></ul>
-            <button class="btn" onclick="hideLeaderboard()">Close</button>
-        </div>
-    </div>
-
-    <script type="module" src="firebase.js"></script>
-    <script src="game.js"></script>
+    <script>
+        // Простая интерактивность
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', () => {
+                alert('Спасибо за выбор! Скоро с вами свяжутся.');
+            });
+        });
+    </script>
 </body>
 </html>
