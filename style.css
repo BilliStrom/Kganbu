@@ -1,128 +1,36 @@
-:root {
-    --primary: #2ecc71;
-    --secondary: #3498db;
-    --background: #2c3e50;
-    --text: #ecf0f1;
-}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentAll - Вход</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>RentAll</h1>
+            <ul class="nav-links">
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="dashboard.html">Личный кабинет</a></li>
+                <li><a href="login.html">Войти</a></li>
+            </ul>
+        </nav>
+    </header>
 
-#bird {
-    transition: top 0.15s ease-out;
-}
+    <main>
+        <section class="auth-form">
+            <h2>Вход</h2>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Пароль" required>
+                <button type="submit" class="btn btn-primary">Войти</button>
+            </form>
+            <p>Нет аккаунта? <a href="register.html">Зарегистрируйтесь</a></p>
+        </section>
+    </main>
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-.pipe {
-    transition: left 0.1s linear;
-}
-
-#bird {
-    transition: top 0.15s ease-out;
-}
-
-.hidden {
-    display: none !important;
-}
-
-body {
-    font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
-    background: var(--background);
-    color: var(--text);
-    touch-action: manipulation;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#game-container {
-    width: 100%;
-    max-width: 400px;
-    padding: 20px;
-}
-
-.form-container {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
-}
-
-input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border: 2px solid var(--primary);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.9);
-    font-size: 16px;
-}
-
-.btn {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    border: none;
-    border-radius: 8px;
-    background: var(--primary);
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.btn:active {
-    transform: scale(0.98);
-}
-
-.secondary {
-    background: var(--secondary);
-}
-
-#game-area {
-    position: relative;
-    height: 600px;
-    background: linear-gradient(to bottom, #4ec0ca, #3aa3bf);
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-#bird {
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    left: 50px;
-    background: #ffd700;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    transition: top 0.3s ease;
-}
-
-.pipe {
-    position: absolute;
-    width: 60px;
-    background: #2ecc71;
-    transition: left 0.1s linear;
-}
-
-/* Mobile Optimization */
-@media (max-width: 480px) {
-    #game-container {
-        padding: 10px;
-    }
-    
-    .form-container {
-        padding: 15px;
-    }
-    
-    input, .btn {
-        font-size: 14px;
-        padding: 10px;
-    }
-}
+    <script src="firebase.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
